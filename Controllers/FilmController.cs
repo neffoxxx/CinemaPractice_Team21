@@ -4,11 +4,11 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CinemaPractice.Controllers
 {
-    public class HomeController : Controller
+    public class FilmController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
+        private readonly ILogger<FilmController> _logger;
 
-        public HomeController(ILogger<HomeController> logger)
+        public FilmController(ILogger<FilmController> logger)
         {
             _logger = logger;
         }
