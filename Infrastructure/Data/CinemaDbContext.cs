@@ -5,9 +5,9 @@ namespace Infrastructure.Data
     using Infrastructure.Entities;
     using Microsoft.EntityFrameworkCore;
 
-    public class CinemaContext : DbContext
+    public class CinemaDbContext : DbContext
     {
-        public CinemaContext(DbContextOptions<CinemaContext> options) : base(options) { }
+        public CinemaDbContext(DbContextOptions<CinemaDbContext> options) : base(options) { }
 
         public DbSet<Movie> Movies { get; set; }
         public DbSet<Actor> Actors { get; set; }
@@ -20,6 +20,9 @@ namespace Infrastructure.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // Застосувати всі конфігурації з Assembly
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(CinemaDbContext).Assembly);
+
             modelBuilder.Entity<MovieActor>()
                 .HasKey(ma => new { ma.MovieId, ma.ActorId });
 
