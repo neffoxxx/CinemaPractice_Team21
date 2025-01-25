@@ -1,8 +1,10 @@
-﻿namespace Infrastructure.Entities
+﻿using Infrastructure.Interfaces;
+
+namespace Infrastructure.Entities
 {
-    public class Movie
+    public class Movie: IEntity
     {
-        public int MovieId { get; set; }
+        public int Id { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }
         public int DurationMinutes { get; set; }
@@ -15,6 +17,4 @@
         public ICollection<MovieGenre> MovieGenres { get; set; }
         public ICollection<Session> Sessions { get; set; }
     }
-
-
 }
