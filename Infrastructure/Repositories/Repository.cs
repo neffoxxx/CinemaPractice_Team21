@@ -3,10 +3,13 @@ using Infrastructure.Entities;
 using Infrastructure.Data;
 using Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System;
+using System.Linq;
+using System.Linq.Expressions;
 
 namespace Infrastructure.Repositories
 {
-    public class Repository<T> : IRepository<T> where T : class, IEntity
+    public class Repository<T> : IRepository<T> where T : class
     {
         protected readonly CinemaDbContext _context;
         protected readonly DbSet<T> _dbSet;
@@ -17,34 +20,67 @@ namespace Infrastructure.Repositories
             _dbSet = context.Set<T>();
         }
 
-        public async Task<IEnumerable<T>> GetAllAsync()
+        public virtual async Task<T> GetByIdAsync(int id)
+        {
+            return await _dbSet.FindAsync(id);
+        }
+
+        public virtual async Task<IEnumerable<T>> GetAllAsync()
         {
             return await _dbSet.ToListAsync();
         }
 
-        public async Task<T> GetByIdAsync(int id)
-        {
-            return await _dbSet.FindAsync(id) 
-                ?? throw new KeyNotFoundException($"Entity with id {id} not found");
-        }
-
-        public async Task AddAsync(T entity)
+        public virtual async Task AddAsync(T entity)
         {
             await _dbSet.AddAsync(entity);
             await _context.SaveChangesAsync();
         }
 
-        public async Task UpdateAsync(T entity)
+        public virtual async Task UpdateAsync(T entity)
         {
             _dbSet.Update(entity);
             await _context.SaveChangesAsync();
         }
 
-        public async Task DeleteAsync(int id)
+        public virtual async Task DeleteAsync(int id)
         {
             var entity = await GetByIdAsync(id);
-            _dbSet.Remove(entity);
-            await _context.SaveChangesAsync();
+            if (entity != null)
+            {
+                _dbSet.Remove(entity);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task<T> GetByIdWithIncludeAsync(int id, Func<IQueryable<T>, IQueryable<T>> include)
+        {
+            IQueryable<T> query = _dbSet;
+            
+            if (include != null)
+            {
+                query = include(query);
+            }
+
+            // Припускаємо, що у всіх сутностей є властивість Id
+            var parameter = Expression.Parameter(typeof(T), "x");
+            var property = Expression.Property(parameter, "Id");
+            var value = Expression.Constant(id);
+            var equals = Expression.Equal(property, value);
+            var lambda = Expression.Lambda<Func<T, bool>>(equals, parameter);
+
+            return await query.FirstOrDefaultAsync(lambda);
+        }
+
+        public async Task<IEnumerable<T>> GetAllWithIncludeAsync(Func<IQueryable<T>, IQueryable<T>> include)
+        {
+            IQueryable<T> query = _dbSet;
+            
+            if (include != null)
+            {
+                query = include(query);
+            }
+
+            return await query.ToListAsync();
         }
     }
 }

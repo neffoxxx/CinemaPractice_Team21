@@ -1,0 +1,70 @@
+@model Infrastructure.Entities.Movie
+
+<h2>Edit Film</h2>
+
+<form asp-action="EditFilm" method="post">
+    <input type="hidden" asp-for="Id" />
+    
+    <div class="form-group mb-3">
+        <label asp-for="Title"></label>
+        <input asp-for="Title" class="form-control" />
+        <span asp-validation-for="Title" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Description"></label>
+        <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="DurationMinutes">Duration (minutes)</label>
+        <input asp-for="DurationMinutes" class="form-control" type="number" />
+        <span asp-validation-for="DurationMinutes" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="ReleaseDate">Release Date</label>
+        <input asp-for="ReleaseDate" type="date" class="form-control" />
+        <span asp-validation-for="ReleaseDate" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="TrailerUrl">Trailer URL</label>
+        <input asp-for="TrailerUrl" class="form-control" />
+        <span asp-validation-for="TrailerUrl" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Rating">Rating</label>
+        <input asp-for="Rating" class="form-control" type="number" step="0.1" min="0" max="10" 
+               value="@Model.Rating.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)" />
+        <span asp-validation-for="Rating" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="PosterUrl">Poster URL</label>
+        <input asp-for="PosterUrl" class="form-control" />
+        <span asp-validation-for="PosterUrl" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <input type="submit" value="Save" class="btn btn-primary" />
+        <a asp-action="ManageFilms" class="btn btn-secondary">Back to List</a>
+    </div>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // Забезпечуємо використання крапки замість коми для десяткових чисел
+        $(document).ready(function () {
+            $('input[type="number"]').on('change', function() {
+                var value = $(this).val();
+                if (value) {
+                    $(this).val(value.replace(',', '.'));
+                }
+            });
+        });
+    </script>
+} 
