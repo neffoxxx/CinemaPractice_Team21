@@ -1,0 +1,14 @@
+﻿@model IEnumerable<Infrastructure.Entities.Movie>
+
+<h2>Test View</h2>
+
+<div>
+    @foreach (var movie in Model)
+    {
+        <div>
+            <h3>@movie.Title</h3>
+            <p>@movie.Description</p>
+            <p>Duration: @movie.DurationMinutes</p>
+        </div>
+    }
+</div>

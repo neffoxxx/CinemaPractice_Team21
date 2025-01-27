@@ -1,0 +1,27 @@
+@model IEnumerable<Infrastructure.Entities.Session>
+
+<h2>Sessions</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Movie</th>
+            <th>Date & Time</th>
+            <th>Price</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var session in Model)
+        {
+            <tr>
+                <td>@session.MovieId</td>
+                <td>@session.StartTime.ToString("dd/MM/yyyy HH:mm")</td>
+                <td>@session.Price.ToString("C")</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@session.SessionId" class="btn btn-info">Details</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

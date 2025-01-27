@@ -1,0 +1,51 @@
+@model IEnumerable<Infrastructure.Entities.Session>
+
+<h2>Manage Sessions</h2>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<p>
+    <a asp-action="AddSession" class="btn btn-primary">Add New Session</a>
+</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Movie</th>
+            <th>Start Time</th>
+            <th>End Time</th>
+            <th>Hall</th>
+            <th>Price</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@(item.Movie?.Title ?? "N/A")</td>
+                <td>@item.StartTime.ToString("dd.MM.yyyy HH:mm")</td>
+                <td>@item.EndTime.ToString("dd.MM.yyyy HH:mm")</td>
+                <td>@item.Hall</td>
+                <td>@item.Price.ToString("C")</td>
+                <td>
+                    <div class="btn-group">
+                        <a asp-action="EditSession" asp-route-id="@item.SessionId" class="btn btn-primary">Edit</a>
+                        <form asp-action="DeleteSession" asp-route-id="@item.SessionId" method="post"
+                              style="display: inline-block;"
+                              onsubmit="return confirm('Are you sure you want to delete this session?');">
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
