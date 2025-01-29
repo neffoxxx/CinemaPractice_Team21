@@ -4,7 +4,6 @@ using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -12,11 +11,9 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(CinemaDbContext))]
-    [Migration("20250124092103_InitialCreate")]
-    partial class InitialCreate
+    partial class CinemaDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -64,6 +61,41 @@ namespace Infrastructure.Migrations
                     b.ToTable("Genres");
                 });
 
+            modelBuilder.Entity("Infrastructure.Entities.Hall", b =>
+                {
+                    b.Property<int>("HallId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("HallId"));
+
+                    b.Property<int>("Capacity")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("RowsCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SeatsPerRow")
+                        .HasColumnType("int");
+
+                    b.HasKey("HallId");
+
+                    b.ToTable("Halls");
+                });
+
             modelBuilder.Entity("Infrastructure.Entities.Movie", b =>
                 {
                     b.Property<int>("MovieId")
@@ -77,6 +109,10 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
+                    b.Property<string>("Director")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("DurationMinutes")
                         .HasColumnType("int");
 
@@ -85,8 +121,8 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<float>("Rating")
-                        .HasColumnType("real");
+                    b.Property<double>("Rating")
+                        .HasColumnType("float");
 
                     b.Property<DateTime>("ReleaseDate")
                         .HasColumnType("datetime2");
@@ -147,20 +183,21 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("EndTime")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Hall")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("HallId")
+                        .HasColumnType("int");
 
                     b.Property<int>("MovieId")
                         .HasColumnType("int");
 
-                    b.Property<float>("Price")
-                        .HasColumnType("real");
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("StartTime")
                         .HasColumnType("datetime2");
 
                     b.HasKey("SessionId");
+
+                    b.HasIndex("HallId");
 
                     b.HasIndex("MovieId");
 
@@ -177,6 +214,9 @@ namespace Infrastructure.Migrations
 
                     b.Property<DateTime>("BookingTime")
                         .HasColumnType("datetime2");
+
+                    b.Property<int>("RowNumber")
+                        .HasColumnType("int");
 
                     b.Property<string>("SeatNumber")
                         .IsRequired()
@@ -210,6 +250,14 @@ namespace Infrastructure.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserId"));
 
                     b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LastName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -273,11 +321,19 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Infrastructure.Entities.Session", b =>
                 {
+                    b.HasOne("Infrastructure.Entities.Hall", "Hall")
+                        .WithMany("Sessions")
+                        .HasForeignKey("HallId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("Infrastructure.Entities.Movie", "Movie")
                         .WithMany("Sessions")
                         .HasForeignKey("MovieId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Hall");
 
                     b.Navigation("Movie");
                 });
@@ -309,6 +365,11 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Infrastructure.Entities.Genre", b =>
                 {
                     b.Navigation("MovieGenres");
+                });
+
+            modelBuilder.Entity("Infrastructure.Entities.Hall", b =>
+                {
+                    b.Navigation("Sessions");
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.Movie", b =>

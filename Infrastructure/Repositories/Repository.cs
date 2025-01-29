@@ -61,9 +61,13 @@ namespace Infrastructure.Repositories
                 query = include(query);
             }
 
-            // Припускаємо, що у всіх сутностей є властивість Id
+            // Отримуємо ім'я ID властивості для конкретного типу
+            var idPropertyName = typeof(T).GetProperties()
+                .FirstOrDefault(p => p.Name.EndsWith("Id"))?.Name ?? "Id";
+
+            // Створюємо динамічний вираз для пошуку по ID
             var parameter = Expression.Parameter(typeof(T), "x");
-            var property = Expression.Property(parameter, "Id");
+            var property = Expression.Property(parameter, idPropertyName);
             var value = Expression.Constant(id);
             var equals = Expression.Equal(property, value);
             var lambda = Expression.Lambda<Func<T, bool>>(equals, parameter);

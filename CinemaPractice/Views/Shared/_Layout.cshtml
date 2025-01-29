@@ -18,6 +18,10 @@
                 <div class="navbar-nav">
                     <a class="nav-link text-white" asp-controller="Film" asp-action="Index">Films</a>
                     <a class="nav-link text-white" asp-controller="Session" asp-action="Index">Sessions</a>
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <a class="nav-link text-white" asp-controller="Ticket" asp-action="MyTickets">My Tickets</a>
+                    }
                     <ul class="navbar-nav ml-auto">
                         @if (User.Identity.IsAuthenticated)
                         {
@@ -34,6 +38,8 @@
                                     <ul class="dropdown-menu" aria-labelledby="adminDropdown">
                                         <li><a class="dropdown-item" asp-controller="Admin" asp-action="ManageFilms">Manage Films</a></li>
                                         <li><a class="dropdown-item" asp-controller="Admin" asp-action="ManageSessions">Manage Sessions</a></li>
+                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="ManageTickets">Manage Tickets</a></li>
+                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="ManageHalls">Manage Halls</a></li>
                                     </ul>
                                 </li>
                             }

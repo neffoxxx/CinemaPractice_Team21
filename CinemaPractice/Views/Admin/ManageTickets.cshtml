@@ -1,0 +1,62 @@
+@using Infrastructure.Entities
+@model IEnumerable<Ticket>
+
+<div class="container">
+    <h2>Manage Tickets</h2>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
+    }
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Movie</th>
+                    <th>Session</th>
+                    <th>Row</th>
+                    <th>Seat</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var ticket in Model)
+                {
+                    <tr>
+                        <td>@ticket.User?.Username</td>
+                        <td>@ticket.Session?.Movie?.Title</td>
+                        <td>@ticket.Session?.StartTime.ToString("g")</td>
+                        <td>@ticket.RowNumber</td>
+                        <td>@ticket.SeatNumber</td>
+                        <td>@ticket.Status</td>
+                        <td>
+                            <div class="btn-group">
+                                <a asp-action="EditTicket" asp-route-id="@ticket.TicketId" 
+                                   class="btn btn-primary btn-sm">Edit</a>
+                                <form asp-action="DeleteTicket" asp-route-id="@ticket.TicketId" 
+                                      method="post" style="display: inline;">
+                                    <button type="submit" class="btn btn-danger btn-sm" 
+                                            onclick="return confirm('Are you sure you want to delete this ticket?')">
+                                        Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

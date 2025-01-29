@@ -94,8 +94,8 @@ namespace CinemaPractice.Controllers
             var user = new User
             {
                 Username = model.Username,
-                firstName = model.FirstName,
-                lastName = model.LastName,
+                FirstName = model.FirstName,
+                LastName = model.LastName,
                 Email = model.Email,
                 PasswordHash = HashPassword(model.Password),
                 Role = isFirstUser ? "Admin" : "User", // Перший користувач стає адміном

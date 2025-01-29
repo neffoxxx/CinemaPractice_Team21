@@ -1,4 +1,4 @@
-﻿@model IEnumerable<Infrastructure.Entities.Movie>
+@model IEnumerable<Infrastructure.Entities.Movie>
 
 <h2>Films</h2>
 
@@ -10,8 +10,9 @@
                 <div class="card-body">
                     <h5 class="card-title">@movie.Title</h5>
                     <p class="card-text">@movie.Description</p>
-                    <p class="card-text"><small class="text-muted">Duration: @movie.DurationMinutes minutes</small></p>
-                    <a asp-action="Details" asp-route-id="@movie.Id" class="btn btn-primary">Details</a>
+                    <p class="card-text">Duration: @movie.DurationMinutes minutes</p>
+                    <a href="@Url.Action("Details", "Film", new { id = movie.MovieId })" 
+                       class="btn btn-primary">Details</a>
                 </div>
             </div>
         </div>

@@ -7,6 +7,7 @@ using Infrastructure.Entities;
 using System;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CinemaPractice.Controllers
 {
@@ -27,42 +28,37 @@ namespace CinemaPractice.Controllers
             return View(movies);
         }
 
+        [AllowAnonymous]
         public async Task<IActionResult> Details(int id)
         {
             try
             {
-                _logger.LogInformation("Getting movie details for id: {Id}", id);
+                _logger.LogInformation("Entering Details action with ID: {Id}", id);
 
-                var movie = await _movieRepository.GetByIdWithIncludeAsync(id, 
-                    query => query.Include(m => m.Sessions.OrderBy(s => s.StartTime)));
+                if (id <= 0)
+                {
+                    _logger.LogWarning("Invalid ID provided: {Id}", id);
+                    return BadRequest();
+                }
+
+                var movie = await _movieRepository.GetByIdWithIncludeAsync(id, query => 
+                    query.Include(m => m.Sessions)
+                         .ThenInclude(s => s.Hall));
 
                 if (movie == null)
                 {
-                    _logger.LogWarning("Movie with id {Id} not found", id);
+                    _logger.LogWarning("Movie with ID {Id} not found", id);
                     return NotFound();
                 }
 
-                _logger.LogInformation("Movie found: {Title}", movie.Title);
-                _logger.LogInformation("Total sessions: {Count}", movie.Sessions?.Count ?? 0);
-
-                // Фільтруємо сесії, щоб показувати тільки майбутні
-                if (movie.Sessions != null)
-                {
-                    var currentTime = DateTime.Now;
-                    movie.Sessions = movie.Sessions
-                        .Where(s => s.StartTime > currentTime)
-                        .OrderBy(s => s.StartTime)
-                        .ToList();
-
-                    _logger.LogInformation("Future sessions: {Count}", movie.Sessions.Count);
-                }
-
+                _logger.LogInformation("Successfully retrieved movie: {Title}", movie.Title);
+                    
                 return View(movie);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while getting movie details: {Message}", ex.Message);
-                return RedirectToAction("Index", "Home");
+                _logger.LogError(ex, "Error retrieving movie details for ID: {Id}", id);
+                throw;
             }
         }
 

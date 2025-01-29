@@ -8,14 +8,21 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+// Register DbContext
 builder.Services.AddDbContext<CinemaDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
     .LogTo(Console.WriteLine)
 );
 
-// Реєстрація репозиторіїв
-builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+// Register Repositories
+builder.Services.AddScoped<IRepository<Movie>, Repository<Movie>>();
+builder.Services.AddScoped<IRepository<Session>, Repository<Session>>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ITicketRepository, TicketRepository>();
+builder.Services.AddScoped<ITicketService, TicketService>();
+builder.Services.AddScoped<ISessionRepository, SessionRepository>();
+builder.Services.AddScoped<IHallRepository, HallRepository>();
 
 builder.Services.AddSession(options =>
 {

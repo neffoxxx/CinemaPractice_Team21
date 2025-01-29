@@ -46,7 +46,10 @@
 
             @if (Model.Sessions != null && Model.Sessions.Any())
             {
-                var futureSessions = Model.Sessions.Where(s => s.StartTime > DateTime.Now).OrderBy(s => s.StartTime).ToList();
+                var futureSessions = Model.Sessions
+                    .Where(s => s.StartTime > DateTime.Now)
+                    .OrderBy(s => s.StartTime)
+                    .ToList();
                 
                 @* Додаткова діагностична інформація *@
                 <div class="alert alert-info">
@@ -73,13 +76,14 @@
                                     <td>@session.StartTime.ToString("dd.MM.yyyy")</td>
                                     <td>@session.StartTime.ToString("HH:mm")</td>
                                     <td>@session.EndTime.ToString("HH:mm")</td>
-                                    <td>@session.Hall</td>
+                                    <td>@(session.Hall?.Name ?? "N/A")</td>
                                     <td>@session.Price.ToString("C")</td>
                                     <td>
-                                        <a asp-controller="Ticket" asp-action="Buy" 
+                                        <a asp-controller="Ticket" 
+                                           asp-action="Book" 
                                            asp-route-sessionId="@session.SessionId" 
-                                           class="btn btn-primary btn-sm">
-                                            <i class="fas fa-ticket-alt"></i> Buy Ticket
+                                           class="btn btn-primary">
+                                            Buy Ticket
                                         </a>
                                     </td>
                                 </tr>

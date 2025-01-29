@@ -1,0 +1,193 @@
+@model TicketBookingViewModel
+
+<div class="container">
+    <h2>Book Ticket</h2>
+    <div class="row">
+        <div class="col-md-6">
+            <form asp-controller="Ticket" asp-action="Book" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="SessionId" />
+                <input type="hidden" asp-for="Price" />
+                <input type="hidden" asp-for="ShowTime" />
+                <input type="hidden" asp-for="MovieTitle" />
+                <input type="hidden" asp-for="HallId" />
+                <input type="hidden" asp-for="HallName" />
+                <input type="hidden" asp-for="RowsCount" />
+                <input type="hidden" asp-for="SeatsPerRow" />
+                
+                <div class="mb-3">
+                    <label class="form-label">Movie: @Model.MovieTitle</label>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Show Time: @Model.ShowTime.ToString("g")</label>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Hall: @Model.HallName</label>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Select Row:</label>
+                    <select id="rowSelect" class="form-select">
+                        <option value="">Choose row...</option>
+                        @foreach (var row in Model.AvailableRows)
+                        {
+                            <option value="@row">Row @row</option>
+                        }
+                    </select>
+                    @if (!Model.AvailableRows.Any())
+                    {
+                        <div class="text-danger mt-2">
+                            No seats available for this session.
+                        </div>
+                    }
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Select Seat:</label>
+                    <select id="seatSelect" class="form-select" disabled>
+                        <option value="">Choose seat...</option>
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Selected Row: <span id="displayRow"></span></label>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Selected Seat: <span id="displaySeat"></span></label>
+                </div>
+                
+                <input type="hidden" asp-for="SeatNumber" id="selectedSeat" />
+                <span asp-validation-for="SeatNumber" class="text-danger"></span>
+                
+                <div class="mb-3">
+                    <label class="form-label">Price: @Model.Price.ToString("C")</label>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" id="bookButton" disabled>
+                    Confirm Booking
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .seat-demo {
+        width: 25px;
+        height: 25px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        display: inline-block;
+        margin-right: 5px;
+    }
+
+    .seat-demo.available {
+        background-color: #fff;
+    }
+
+    .seat-demo.booked {
+        background-color: #f44336;
+        opacity: 0.7;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+</style>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const rowSelect = document.getElementById('rowSelect');
+            const seatSelect = document.getElementById('seatSelect');
+            const selectedSeatInput = document.getElementById('selectedSeat');
+            const bookButton = document.getElementById('bookButton');
+            const displayRow = document.getElementById('displayRow');
+            const displaySeat = document.getElementById('displaySeat');
+            const bookedSeats = @Html.Raw(Json.Serialize(Model.BookedSeats));
+            const seatsPerRow = @Model.SeatsPerRow;
+
+            function calculateGlobalSeatNumber(row, seat) {
+                return ((row - 1) * seatsPerRow + seat).toString();
+            }
+
+            function isBooked(row, seat) {
+                const globalSeatNumber = calculateGlobalSeatNumber(row, seat);
+                return bookedSeats.includes(globalSeatNumber);
+            }
+
+            rowSelect.addEventListener('change', async function() {
+                const row = this.value;
+                if (row) {
+                    const response = await fetch(`/Ticket/GetAvailableSeats?sessionId=@Model.SessionId&rowNumber=${row}&seatsPerRow=@Model.SeatsPerRow`);
+                    const availableSeats = await response.json();
+                    
+                    seatSelect.innerHTML = '<option value="">Choose seat...</option>';
+                    availableSeats.forEach(seat => {
+                        const option = document.createElement('option');
+                        option.value = ((row - 1) * @Model.SeatsPerRow + seat).toString();
+                        option.textContent = seat.toString();
+                        seatSelect.appendChild(option);
+                    });
+                    
+                    seatSelect.disabled = false;
+                } else {
+                    seatSelect.innerHTML = '<option value="">Choose seat...</option>';
+                    seatSelect.disabled = true;
+                }
+            });
+
+            seatSelect.addEventListener('change', function() {
+                const selectedRow = rowSelect.value;
+                const selectedSeat = this.value;
+                selectedSeatInput.value = selectedSeat;
+                bookButton.disabled = !selectedSeat;
+                
+                if (selectedSeat && selectedRow) {
+                    const seatNumber = parseInt(this.options[this.selectedIndex].textContent);
+                    displayRow.textContent = `Row ${selectedRow}`;
+                    displaySeat.textContent = `Seat ${seatNumber}`;
+                } else {
+                    displayRow.textContent = '';
+                    displaySeat.textContent = '';
+                }
+            });
+
+            // Додаємо обробник події submit форми
+            document.querySelector('form').addEventListener('submit', function(e) {
+                if (!selectedSeatInput.value) {
+                    e.preventDefault();
+                    alert('Please select a seat before booking');
+                    return false;
+                }
+
+                const selectedRow = parseInt(rowSelect.value);
+                const selectedSeat = parseInt(selectedSeatInput.value);
+
+                // Перевіряємо ще раз перед відправкою
+                if (isBooked(selectedRow, selectedSeat)) {
+                    e.preventDefault();
+                    alert('This seat is already booked. Please select another seat.');
+                    return false;
+                }
+            });
+
+            // Додаємо функцію для оновлення списку доступних місць
+            function updateAvailableSeats() {
+                if (rowSelect.value) {
+                    const event = new Event('change');
+                    rowSelect.dispatchEvent(event);
+                }
+            }
+
+            // Оновлюємо список доступних місць при завантаженні сторінки
+            updateAvailableSeats();
+        });
+    </script>
+}

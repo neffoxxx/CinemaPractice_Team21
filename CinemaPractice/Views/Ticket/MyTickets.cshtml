@@ -1,0 +1,45 @@
+@using Infrastructure.Entities
+@model IEnumerable<Ticket>
+
+<div class="container">
+    <h2>My Tickets</h2>
+    
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            You don't have any tickets yet.
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Movie</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Hall</th>
+                        <th>Row</th>
+                        <th>Seat</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var ticket in Model)
+                    {
+                        <tr>
+                            <td>@(ticket.Session?.Movie?.Title ?? "N/A")</td>
+                            <td>@(ticket.Session?.StartTime.ToShortDateString() ?? "N/A")</td>
+                            <td>@(ticket.Session?.StartTime.ToShortTimeString() ?? "N/A")</td>
+                            <td>@(ticket.Session?.Hall?.Name ?? "N/A")</td>
+                            <td>@ticket.RowNumber</td>
+                            <td>@ticket.SeatNumber</td>
+                            <td>@ticket.Status</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
