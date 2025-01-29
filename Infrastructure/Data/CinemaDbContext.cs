@@ -17,6 +17,7 @@ namespace Infrastructure.Data
         public DbSet<Ticket> Tickets { get; set; }
         public DbSet<MovieActor> MovieActors { get; set; }
         public DbSet<MovieGenre> MovieGenres { get; set; }
+        public DbSet<Hall> Halls { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -28,6 +29,7 @@ namespace Infrastructure.Data
 
             modelBuilder.Entity<MovieGenre>()
                 .HasKey(mg => new { mg.MovieId, mg.GenreId });
+                
 
             modelBuilder.Entity<Ticket>()
                 .HasOne(t => t.Session)
@@ -38,6 +40,30 @@ namespace Infrastructure.Data
                 .HasOne(t => t.User)
                 .WithMany(u => u.Tickets)
                 .HasForeignKey(t => t.UserId);
+
+            modelBuilder.Entity<Hall>(entity =>
+            {
+                entity.HasKey(e => e.HallId);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Description).HasMaxLength(500);
+                
+                // Зв'язок один-до-багатьох з Sessions
+                entity.HasMany(h => h.Sessions)
+                      .WithOne(s => s.Hall)
+                      .HasForeignKey(s => s.HallId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // Конфігурація зв'язку між Session та Hall
+            modelBuilder.Entity<Session>()
+                .HasOne(s => s.Movie)
+                .WithMany(m => m.Sessions)
+                .HasForeignKey(s => s.MovieId);
+
+            modelBuilder.Entity<Session>()
+                .HasOne(s => s.Hall)
+                .WithMany(h => h.Sessions)
+                .HasForeignKey(s => s.HallId);
         }
     }
 

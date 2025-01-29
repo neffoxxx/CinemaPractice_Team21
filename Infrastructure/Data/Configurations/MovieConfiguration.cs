@@ -8,7 +8,7 @@ namespace Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<Movie> builder)
         {
-            builder.HasKey(m => m.Id);
+            builder.HasKey(m => m.MovieId);
             
             builder.Property(m => m.Title)
                 .IsRequired()

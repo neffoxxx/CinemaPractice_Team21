@@ -40,6 +40,24 @@ namespace Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Halls",
+                columns: table => new
+                {
+                    HallId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Capacity = table.Column<int>(type: "int", nullable: false),
+                    RowsCount = table.Column<int>(type: "int", nullable: false),
+                    SeatsPerRow = table.Column<int>(type: "int", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Halls", x => x.HallId);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Movies",
                 columns: table => new
                 {
@@ -47,11 +65,12 @@ namespace Infrastructure.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     Description = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: false),
-                    DurationMinutes = table.Column<int>(type: "int", nullable: false),
                     ReleaseDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Director = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Rating = table.Column<double>(type: "float", nullable: false),
+                    PosterUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
                     TrailerUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
-                    Rating = table.Column<float>(type: "real", nullable: false),
-                    PosterUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false)
+                    DurationMinutes = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -65,6 +84,8 @@ namespace Infrastructure.Migrations
                     UserId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Username = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Role = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -130,14 +151,20 @@ namespace Infrastructure.Migrations
                     SessionId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     MovieId = table.Column<int>(type: "int", nullable: false),
+                    HallId = table.Column<int>(type: "int", nullable: false),
                     StartTime = table.Column<DateTime>(type: "datetime2", nullable: false),
                     EndTime = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Hall = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Price = table.Column<float>(type: "real", nullable: false)
+                    Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Sessions", x => x.SessionId);
+                    table.ForeignKey(
+                        name: "FK_Sessions_Halls_HallId",
+                        column: x => x.HallId,
+                        principalTable: "Halls",
+                        principalColumn: "HallId",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Sessions_Movies_MovieId",
                         column: x => x.MovieId,
@@ -154,6 +181,7 @@ namespace Infrastructure.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     SessionId = table.Column<int>(type: "int", nullable: false),
                     UserId = table.Column<int>(type: "int", nullable: false),
+                    RowNumber = table.Column<int>(type: "int", nullable: false),
                     SeatNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     BookingTime = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false)
@@ -184,6 +212,11 @@ namespace Infrastructure.Migrations
                 name: "IX_MovieGenres_GenreId",
                 table: "MovieGenres",
                 column: "GenreId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Sessions_HallId",
+                table: "Sessions",
+                column: "HallId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Sessions_MovieId",
@@ -224,6 +257,9 @@ namespace Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "Users");
+
+            migrationBuilder.DropTable(
+                name: "Halls");
 
             migrationBuilder.DropTable(
                 name: "Movies");

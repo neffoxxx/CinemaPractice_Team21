@@ -1,0 +1,52 @@
+@model IEnumerable<HallViewModel>
+
+<div class="container">
+    <h2>Manage Halls</h2>
+    <p>
+        <a asp-action="AddHall" class="btn btn-primary">Create New Hall</a>
+    </p>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>@Html.DisplayNameFor(model => model.Name)</th>
+                <th>@Html.DisplayNameFor(model => model.Capacity)</th>
+                <th>@Html.DisplayNameFor(model => model.RowsCount)</th>
+                <th>@Html.DisplayNameFor(model => model.SeatsPerRow)</th>
+                <th>@Html.DisplayNameFor(model => model.IsActive)</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@Html.DisplayFor(modelItem => item.Name)</td>
+                    <td>@Html.DisplayFor(modelItem => item.Capacity)</td>
+                    <td>@Html.DisplayFor(modelItem => item.RowsCount)</td>
+                    <td>@Html.DisplayFor(modelItem => item.SeatsPerRow)</td>
+                    <td>@Html.DisplayFor(modelItem => item.IsActive)</td>
+                    <td>
+                        <a asp-action="EditHall" asp-route-id="@item.HallId" class="btn btn-primary btn-sm">Edit</a>
+                        <form asp-action="DeleteHall" asp-route-id="@item.HallId" method="post" style="display: inline;">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-danger btn-sm" 
+                                    onclick="return confirm('Are you sure you want to delete this hall?');">
+                                Delete
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div> 

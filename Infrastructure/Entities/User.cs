@@ -10,10 +10,10 @@ namespace Infrastructure.Entities
         public string Username { get; set; }
 
         [Required(ErrorMessage = "First name is required")]
-        public string firstName { get; set; } = string.Empty;
+        public string FirstName { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Last name is required")]
-        public string lastName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Email is required")]
         [EmailAddress(ErrorMessage = "Invalid email address")]
