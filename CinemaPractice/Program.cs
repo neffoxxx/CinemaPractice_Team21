@@ -1,29 +1,55 @@
+using AppCore.Mapping;
+using AppCore.Services;
+using AppCore.Validators;
+using AppCore.DTOs;
+using FluentValidation;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Infrastructure.Data;
 using Infrastructure.Entities;
 using Infrastructure.Repositories;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.Extensions.Configuration;
+using System;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-// Register DbContext
+// Configure Database Context
 builder.Services.AddDbContext<CinemaDbContext>(options =>
+{
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
-    .LogTo(Console.WriteLine)
-);
+           .LogTo(Console.WriteLine); // Keep logging for dev, remove for prod
+});
 
-// Register Repositories
-builder.Services.AddScoped<IRepository<Movie>, Repository<Movie>>();
-builder.Services.AddScoped<IRepository<Session>, Repository<Session>>();
+// Configure Repositories
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<ITicketRepository, TicketRepository>();
-builder.Services.AddScoped<ITicketService, TicketService>();
 builder.Services.AddScoped<ISessionRepository, SessionRepository>();
+builder.Services.AddScoped<ITicketRepository, TicketRepository>();
 builder.Services.AddScoped<IHallRepository, HallRepository>();
 
+// Configure Services
+builder.Services.AddScoped<IMovieService, MovieService>();
+builder.Services.AddScoped<IHallService, HallService>();
+builder.Services.AddScoped<ITicketService, TicketService>();
+builder.Services.AddScoped<ISessionService, SessionService>();
+
+// Configure Validators
+builder.Services.AddScoped<IValidator<MovieDTO>, MovieValidator>();
+builder.Services.AddScoped<IValidator<SessionDTO>, SessionValidator>();
+builder.Services.AddScoped<IValidator<TicketDTO>, TicketValidator>();
+builder.Services.AddScoped<IValidator<HallDTO>, HallValidator>();
+
+//Configure AutoMapper
+builder.Services.AddAutoMapper(typeof(MappingProfile));
+
+// Configure Session
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(30);
@@ -31,6 +57,7 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
+// Configure Authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -46,7 +73,6 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Film/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 

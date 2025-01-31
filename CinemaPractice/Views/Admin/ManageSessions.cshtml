@@ -1,5 +1,4 @@
-@model IEnumerable<Infrastructure.Entities.Session>
-
+@model IEnumerable<AppCore.DTOs.SessionDTO>
 <h2>Manage Sessions</h2>
 
 @if (TempData["Success"] != null)
@@ -32,18 +31,11 @@
             @foreach (var item in Model)
             {
                 <tr>
-                    <td>@(item.Movie?.Title ?? "N/A")</td>
+                    <td>@item.Movies?.FirstOrDefault(m => m.Value == item.MovieId.ToString())?.Text @item.MovieId</td>
                     <td>@item.StartTime.ToString("dd.MM.yyyy HH:mm")</td>
                     <td>@item.EndTime.ToString("dd.MM.yyyy HH:mm")</td>
                     <td>
-                        @if (item.Hall != null)
-                        {
-                            @item.Hall.Name
-                        }
-                        else
-                        {
-                            <span class="text-danger">Hall not found (ID: @item.HallId)</span>
-                        }
+                        @item.Halls?.FirstOrDefault(h => h.Value == item.HallId.ToString())?.Text @item.HallId
                     </td>
                     <td>@item.Price.ToString("C")</td>
                     <td>

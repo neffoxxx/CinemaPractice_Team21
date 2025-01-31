@@ -90,5 +90,10 @@ namespace Infrastructure.Repositories
                 .Where(t => t.SessionId == sessionId)
                 .ToListAsync();
         }
+
+        public Task<bool> AnyAsync(Func<object, bool> value)
+        {
+            throw new NotImplementedException();
+        }
     }
 } 

@@ -1,6 +1,5 @@
 @using Infrastructure.Entities
-@model IEnumerable<Ticket>
-
+@model IEnumerable<AppCore.DTOs.TicketDTO>
 <div class="container">
     <h2>Manage Tickets</h2>
 
@@ -35,9 +34,9 @@
                 @foreach (var ticket in Model)
                 {
                     <tr>
-                        <td>@ticket.User?.Username</td>
-                        <td>@ticket.Session?.Movie?.Title</td>
-                        <td>@ticket.Session?.StartTime.ToString("g")</td>
+                        <td>@ticket.UserName</td>
+                        <td>@ticket.MovieTitle</td>
+                       <td>@ticket.ShowTime.ToString("g")</td>
                         <td>@ticket.RowNumber</td>
                         <td>@ticket.SeatNumber</td>
                         <td>@ticket.Status</td>
