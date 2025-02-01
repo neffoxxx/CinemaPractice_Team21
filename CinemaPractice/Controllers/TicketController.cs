@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using CinemaPractice.Models;
 using Infrastructure.Entities;
 using Infrastructure.Repositories;
-
+using AppCore.Services;
 
 namespace CinemaPractice.Controllers
 {

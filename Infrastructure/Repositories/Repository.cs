@@ -55,7 +55,7 @@ namespace Infrastructure.Repositories
         public async Task<T> GetByIdWithIncludeAsync(int id, Func<IQueryable<T>, IQueryable<T>> include)
         {
             IQueryable<T> query = _dbSet;
-            
+
             if (include != null)
             {
                 query = include(query);
@@ -78,13 +78,17 @@ namespace Infrastructure.Repositories
         public async Task<IEnumerable<T>> GetAllWithIncludeAsync(Func<IQueryable<T>, IQueryable<T>> include)
         {
             IQueryable<T> query = _dbSet;
-            
+
             if (include != null)
             {
                 query = include(query);
             }
 
             return await query.ToListAsync();
+        }
+     public async Task<bool> AnyAsync(Expression<Func<T, bool>> predicate)
+        {
+            return await _context.Set<T>().AnyAsync(predicate);
         }
     }
 }

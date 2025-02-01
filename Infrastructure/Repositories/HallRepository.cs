@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 
 namespace Infrastructure.Repositories
 {
-    public class HallRepository : IHallRepository, IRepository<Hall>
+    public class HallRepository : Repository<Hall>, IHallRepository
     {
         private readonly CinemaDbContext _context;
 
-        public HallRepository(CinemaDbContext context)
+        public HallRepository(CinemaDbContext context) : base(context)
         {
             _context = context;
         }

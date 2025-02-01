@@ -12,5 +12,6 @@ namespace Infrastructure.Repositories
         Task<List<string>> GetBookedSeatsForSessionAsync(int sessionId);
         Task<Ticket> GetByIdWithDetailsAsync(int id);
         Task<IEnumerable<Ticket>> GetTicketsBySessionAsync(int sessionId);
+        Task<bool> AnyAsync(Func<object, bool> value);
     }
 } 
