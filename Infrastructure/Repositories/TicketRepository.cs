@@ -86,14 +86,20 @@ namespace Infrastructure.Repositories
 
         public async Task<IEnumerable<Ticket>> GetTicketsBySessionAsync(int sessionId)
         {
-            return await _context.Tickets
-                .Where(t => t.SessionId == sessionId)
+            var tickets = await _context.Tickets
+                .Where(t => t.SessionId == sessionId && t.Status == "Booked")
                 .ToListAsync();
+            
+            return tickets;
         }
 
-        public Task<bool> AnyAsync(Func<object, bool> value)
+        public async Task<bool> AnyAsync(Func<object, bool> predicate)
         {
-            throw new NotImplementedException();
+            return await _context.Tickets
+                .AnyAsync(t => t.SessionId == ((Ticket)predicate.Target).SessionId 
+                    && t.RowNumber == ((Ticket)predicate.Target).RowNumber 
+                    && t.SeatNumber == ((Ticket)predicate.Target).SeatNumber 
+                    && t.Status == "Booked");
         }
     }
 } 

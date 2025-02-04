@@ -34,7 +34,7 @@ namespace CinemaPractice.Controllers
         {
             try
             {
-                _logger.LogInformation("Attempting to book ticket for session: {SessionId}", sessionId);
+                _logger.LogInformation("Starting booking process for session: {SessionId}", sessionId);
 
                 if (sessionId <= 0)
                 {
@@ -69,8 +69,22 @@ namespace CinemaPractice.Controllers
                     session.Hall.RowsCount, 
                     session.Hall.SeatsPerRow);
 
+                _logger.LogInformation("Available rows for session {SessionId}: {Rows}", 
+                    sessionId, string.Join(", ", availableRows));
+
                 var existingTickets = await _ticketRepository.GetTicketsBySessionAsync(sessionId);
                 var bookedSeats = existingTickets.Select(t => t.SeatNumber).ToList();
+
+                _logger.LogInformation("Session {SessionId} details:" +
+                    "\nTotal Rows: {RowsCount}" +
+                    "\nSeats Per Row: {SeatsPerRow}" +
+                    "\nBooked Seats Count: {BookedSeatsCount}" +
+                    "\nAvailable Rows Count: {AvailableRowsCount}",
+                    sessionId,
+                    session.Hall.RowsCount,
+                    session.Hall.SeatsPerRow,
+                    bookedSeats.Count,
+                    availableRows.Count);
 
                 var model = new TicketBookingViewModel
                 {
@@ -83,15 +97,21 @@ namespace CinemaPractice.Controllers
                     RowsCount = session.Hall.RowsCount,
                     SeatsPerRow = session.Hall.SeatsPerRow,
                     BookedSeats = bookedSeats,
-                    AvailableRows = availableRows  // Додаємо доступні ряди до моделі
+                    AvailableRows = availableRows  // Перевіряємо, чи не null тут
                 };
 
-                _logger.LogInformation("Successfully created booking view model for session: {SessionId}", sessionId);
+                _logger.LogInformation("Created TicketBookingViewModel for session {SessionId}:" +
+                    "\nAvailable Rows: {AvailableRows}" +
+                    "\nBooked Seats: {BookedSeats}",
+                    sessionId,
+                    string.Join(", ", model.AvailableRows),
+                    string.Join(", ", model.BookedSeats));
+
                 return View(model);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error loading booking page");
+                _logger.LogError(ex, "Error loading booking page for session {SessionId}", sessionId);
                 return RedirectToAction("Index", "Home");
             }
         }
