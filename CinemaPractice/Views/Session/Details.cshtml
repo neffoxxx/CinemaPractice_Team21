@@ -4,9 +4,21 @@
 
 <div class="card">
     <div class="card-body">
-        <h4>Movie ID: @Model.MovieId</h4>
-        <p>Date & Time: @Model.StartTime.ToString("dd/MM/yyyy HH:mm")</p>
-        <p>Price: @Model.Price.ToString("C")</p>
+        <h4 class="card-title">@(Model.Movie?.Title ?? "N/A")</h4>
+        <hr />
+        <dl class="row">
+            <dt class="col-sm-3">Hall</dt>
+            <dd class="col-sm-9">@(Model.Hall?.Name ?? "N/A")</dd>
+
+            <dt class="col-sm-3">Start Time</dt>
+            <dd class="col-sm-9">@Model.StartTime.ToString("dd/MM/yyyy HH:mm")</dd>
+
+            <dt class="col-sm-3">End Time</dt>
+            <dd class="col-sm-9">@Model.EndTime.ToString("dd/MM/yyyy HH:mm")</dd>
+
+            <dt class="col-sm-3">Price</dt>
+            <dd class="col-sm-9">@Model.Price.ToString("C")</dd>
+        </dl>
     </div>
 </div>
 

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AppCore.DTOs;
 using AutoMapper;
 using Infrastructure.Entities;
+using Infrastructure.Interfaces;
 using Infrastructure.Repositories;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -40,14 +41,17 @@ namespace AppCore.Services
             var sessions = await _sessionRepository.GetAllWithIncludeAsync(
                    query => query
                        .Include(s => s.Movie)
-                       .Include(s => s.Hall)
-                       .OrderBy(s => s.StartTime));
+                       .Include(s => s.Hall));
 
             if (sessions == null || !sessions.Any())
             {
                 _logger.LogInformation("No sessions found");
                 return new List<SessionDTO>();
             }
+
+            // Сортуємо результати після отримання даних
+            sessions = sessions.OrderBy(s => s.StartTime).ToList();
+
             foreach (var session in sessions)
             {
                 if (session.Movie == null)
@@ -62,7 +66,6 @@ namespace AppCore.Services
 
             var sessionDtos = _mapper.Map<IEnumerable<SessionDTO>>(sessions);
             return sessionDtos;
-
         }
 
         public async Task<SessionDTO> GetSessionByIdAsync(int id)
@@ -107,17 +110,36 @@ namespace AppCore.Services
         public async Task AddSessionAsync(SessionDTO sessionDto)
         {
             _logger.LogInformation("Adding new session for movie: {MovieId}", sessionDto.MovieId);
-            var session = _mapper.Map<Session>(sessionDto);
 
-            // Get movie for the duration
+            // Перевірка наявності фільму
             var movie = await _movieRepository.GetByIdAsync(sessionDto.MovieId);
             if (movie == null)
             {
-                _logger.LogError("Movie not found with id: {MovieId}", sessionDto.MovieId);
                 throw new Exception($"Movie not found with id: {sessionDto.MovieId}");
             }
-            // Calculate and set EndTime for the session
-            session.EndTime = sessionDto.StartTime.AddMinutes(movie.DurationMinutes);
+
+            // Перевірка наявності залу
+            var hall = await _hallRepository.GetByIdAsync(sessionDto.HallId);
+            if (hall == null)
+            {
+                throw new Exception($"Hall not found with id: {sessionDto.HallId}");
+            }
+
+            // Розрахунок часу закінчення сеансу
+            sessionDto.EndTime = sessionDto.StartTime.AddMinutes(movie.DurationMinutes);
+
+            // Перевірка доступності залу
+            var isHallAvailable = await _sessionRepository.IsHallAvailableAsync(
+                sessionDto.HallId, 
+                sessionDto.StartTime, 
+                sessionDto.EndTime);
+
+            if (!isHallAvailable)
+            {
+                throw new Exception("Hall is not available at the selected time");
+            }
+
+            var session = _mapper.Map<Session>(sessionDto);
             await _sessionRepository.AddAsync(session);
         }
 

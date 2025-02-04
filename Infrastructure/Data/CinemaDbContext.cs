@@ -24,12 +24,31 @@ namespace Infrastructure.Data
             // Застосувати всі конфігурації з Assembly
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(CinemaDbContext).Assembly);
 
+            modelBuilder.Entity<MovieGenre>()
+                .HasKey(mg => new { mg.MovieId, mg.GenreId });
+
+            modelBuilder.Entity<MovieGenre>()
+                .HasOne(mg => mg.Movie)
+                .WithMany(m => m.MovieGenres)
+                .HasForeignKey(mg => mg.MovieId);
+
+            modelBuilder.Entity<MovieGenre>()
+                .HasOne(mg => mg.Genre)
+                .WithMany(g => g.MovieGenres)
+                .HasForeignKey(mg => mg.GenreId);
+
             modelBuilder.Entity<MovieActor>()
                 .HasKey(ma => new { ma.MovieId, ma.ActorId });
 
-            modelBuilder.Entity<MovieGenre>()
-                .HasKey(mg => new { mg.MovieId, mg.GenreId });
-                
+            modelBuilder.Entity<MovieActor>()
+                .HasOne(ma => ma.Movie)
+                .WithMany(m => m.MovieActors)
+                .HasForeignKey(ma => ma.MovieId);
+
+            modelBuilder.Entity<MovieActor>()
+                .HasOne(ma => ma.Actor)
+                .WithMany(a => a.MovieActors)
+                .HasForeignKey(ma => ma.ActorId);
 
             modelBuilder.Entity<Ticket>()
                 .HasOne(t => t.Session)

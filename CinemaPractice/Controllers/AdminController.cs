@@ -23,6 +23,8 @@ namespace CinemaPractice.Controllers
         private readonly IValidator<SessionDTO> _sessionValidator;
         private readonly IValidator<TicketDTO> _ticketValidator;
         private readonly IValidator<HallDTO> _hallValidator;
+        private readonly IActorService _actorService;
+        private readonly IGenreService _genreService;
 
         public AdminController(
             IMovieService movieService,
@@ -33,7 +35,9 @@ namespace CinemaPractice.Controllers
                IValidator<MovieDTO> movieValidator,
             IValidator<SessionDTO> sessionValidator,
             IValidator<TicketDTO> ticketValidator,
-            IValidator<HallDTO> hallValidator)
+            IValidator<HallDTO> hallValidator,
+            IActorService actorService,
+            IGenreService genreService)
         {
             _movieService = movieService;
             _sessionService = sessionService;
@@ -44,6 +48,8 @@ namespace CinemaPractice.Controllers
             _sessionValidator = sessionValidator;
             _ticketValidator = ticketValidator;
             _hallValidator = hallValidator;
+            _actorService = actorService;
+            _genreService = genreService;
         }
 
 
@@ -53,40 +59,23 @@ namespace CinemaPractice.Controllers
             return View(films);
         }
 
-        [HttpGet]
-        public IActionResult AddFilm()
+        public async Task<IActionResult> AddFilm()
         {
-            return View(new MovieDTO { ReleaseDate = DateTime.Today, Rating = 0, Director = "" });
+            await LoadGenresAndActors();
+            return View(new MovieDTO());
         }
 
         [HttpPost]
         public async Task<IActionResult> AddFilm(MovieDTO movieDto)
         {
-            var validationResult = await _movieValidator.ValidateAsync(movieDto);
-            if (!validationResult.IsValid)
+            if (ModelState.IsValid)
             {
-                foreach (var error in validationResult.Errors)
-                {
-                    ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
-                }
-
-                return View(movieDto);
-            }
-            try
-            {
-                _logger.LogInformation("Attempting to add new film: {Title}", movieDto.Title);
-
                 await _movieService.AddMovieAsync(movieDto);
-                _logger.LogInformation("Movie added successfully");
-                TempData["Success"] = "Film added successfully";
                 return RedirectToAction(nameof(ManageFilms));
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while adding film");
-                ModelState.AddModelError("", $"Error adding film: {ex.Message}");
-                return View(movieDto);
-            }
+            
+            await LoadGenresAndActors();
+            return View(movieDto);
         }
 
         public async Task<IActionResult> ManageSessions()
@@ -104,51 +93,24 @@ namespace CinemaPractice.Controllers
             }
         }
 
+        [HttpGet]
         public async Task<IActionResult> AddSession()
         {
-            try
+            var sessionDto = new SessionDTO
             {
-                _logger.LogInformation("Loading data for AddSession form");
-                var model = new SessionDTO();
-                await _sessionService.PopulateSessionSelectLists(model);
-
-                // Set initial time to the next hour rounded down
-                var startTime = DateTime.Now.AddHours(1);
-                startTime = new DateTime(startTime.Year, startTime.Month, startTime.Day, startTime.Hour, 0, 0);
-                model.StartTime = startTime;
-                model.EndTime = startTime;
-
-                if (model.Movies == null || !model.Movies.Any())
-                {
-                    ModelState.AddModelError("MovieId", "No movies available in the database");
-                }
-                if (model.Halls == null || !model.Halls.Any())
-                {
-                    ModelState.AddModelError("HallId", "No halls available in the database");
-                }
-                return View(model);
-
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error preparing AddSession form");
-                TempData["Error"] = "Error loading form data: " + ex.Message;
-                return RedirectToAction(nameof(ManageSessions));
-            }
+                StartTime = DateTime.Now.AddHours(1).RoundToNearestHour()
+            };
+            
+            await _sessionService.PopulateSessionSelectLists(sessionDto);
+            return View(sessionDto);
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddSession(SessionDTO sessionDto)
         {
-            var validationResult = await _sessionValidator.ValidateAsync(sessionDto);
-            if (!validationResult.IsValid)
+            if (!ModelState.IsValid)
             {
                 await _sessionService.PopulateSessionSelectLists(sessionDto);
-                foreach (var error in validationResult.Errors)
-                {
-                    ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
-                }
                 return View(sessionDto);
             }
 
@@ -160,8 +122,7 @@ namespace CinemaPractice.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error adding session");
-                ModelState.AddModelError("", "Error adding session: " + ex.Message);
+                ModelState.AddModelError("", $"Error adding session: {ex.Message}");
                 await _sessionService.PopulateSessionSelectLists(sessionDto);
                 return View(sessionDto);
             }
@@ -197,56 +158,40 @@ namespace CinemaPractice.Controllers
             return RedirectToAction(nameof(ManageSessions));
         }
 
-        [HttpGet]
         public async Task<IActionResult> EditFilm(int id)
         {
-            try
+            var movie = await _movieService.GetMovieByIdAsync(id);
+            if (movie == null)
             {
-                _logger.LogInformation("Loading film for editing, ID: {Id}", id);
-                var movie = await _movieService.GetMovieByIdAsync(id);
-                if (movie == null)
-                {
-                    return NotFound();
-                }
-                return View(movie);
+                return NotFound();
+            }
 
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error loading film for editing, ID: {Id}", id);
-                TempData["Error"] = "Error loading film for editing: " + ex.Message;
-                return RedirectToAction(nameof(ManageFilms));
-            }
+            ViewBag.Genres = await _genreService.GetAllGenresAsync();
+            ViewBag.Actors = await _actorService.GetAllActorsAsync();
+
+            return View(movie);
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditFilm(MovieDTO movieDto)
         {
-            var validationResult = await _movieValidator.ValidateAsync(movieDto);
-            if (!validationResult.IsValid)
+            if (ModelState.IsValid)
             {
-                foreach (var error in validationResult.Errors)
+                try
                 {
-                    ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+                    await _movieService.UpdateMovieAsync(movieDto);
+                    return RedirectToAction(nameof(ManageFilms));
                 }
-                return View(movieDto);
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", "An error occurred while updating the movie.");
+                    _logger.LogError(ex, "Error updating movie");
+                }
             }
 
-            try
-            {
-                _logger.LogInformation("Attempting to update film: {Id}", movieDto.MovieId);
-                await _movieService.UpdateMovieAsync(movieDto);
-                _logger.LogInformation("Film updated successfully: {Id}", movieDto.MovieId);
-                TempData["Success"] = "Film updated successfully";
-                return RedirectToAction(nameof(ManageFilms));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error updating film: {Id}", movieDto.MovieId);
-                ModelState.AddModelError("", "Error updating film: " + ex.Message);
-                return View(movieDto);
-            }
+            ViewBag.Genres = await _genreService.GetAllGenresAsync();
+            ViewBag.Actors = await _actorService.GetAllActorsAsync();
+            return View(movieDto);
         }
 
         [HttpGet]
@@ -476,6 +421,120 @@ namespace CinemaPractice.Controllers
             }
 
             return RedirectToAction(nameof(ManageHalls));
+        }
+
+        // Actors
+        public async Task<IActionResult> ManageActors()
+        {
+            var actors = await _actorService.GetAllActorsAsync();
+            return View(actors);
+        }
+
+        public IActionResult AddActor()
+        {
+            return View(new ActorDTO());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddActor(ActorDTO actorDto)
+        {
+            if (ModelState.IsValid)
+            {
+                await _actorService.AddActorAsync(actorDto);
+                return RedirectToAction(nameof(ManageActors));
+            }
+            return View(actorDto);
+        }
+
+        public async Task<IActionResult> EditActor(int id)
+        {
+            var actor = await _actorService.GetActorByIdAsync(id);
+            if (actor == null)
+            {
+                return NotFound();
+            }
+            return View(actor);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditActor(ActorDTO actorDto)
+        {
+            if (ModelState.IsValid)
+            {
+                await _actorService.UpdateActorAsync(actorDto);
+                return RedirectToAction(nameof(ManageActors));
+            }
+            return View(actorDto);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteActor(int id)
+        {
+            await _actorService.DeleteActorAsync(id);
+            return RedirectToAction(nameof(ManageActors));
+        }
+
+        // Genres
+        public async Task<IActionResult> ManageGenres()
+        {
+            var genres = await _genreService.GetAllGenresAsync();
+            return View(genres);
+        }
+
+        public IActionResult AddGenre()
+        {
+            return View(new GenreDTO());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddGenre(GenreDTO genreDto)
+        {
+            if (ModelState.IsValid)
+            {
+                await _genreService.AddGenreAsync(genreDto);
+                return RedirectToAction(nameof(ManageGenres));
+            }
+            return View(genreDto);
+        }
+
+        public async Task<IActionResult> EditGenre(int id)
+        {
+            var genre = await _genreService.GetGenreByIdAsync(id);
+            if (genre == null)
+            {
+                return NotFound();
+            }
+            return View(genre);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditGenre(GenreDTO genreDto)
+        {
+            if (ModelState.IsValid)
+            {
+                await _genreService.UpdateGenreAsync(genreDto);
+                return RedirectToAction(nameof(ManageGenres));
+            }
+            return View(genreDto);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteGenre(int id)
+        {
+            await _genreService.DeleteGenreAsync(id);
+            return RedirectToAction(nameof(ManageGenres));
+        }
+
+        private async Task LoadGenresAndActors()
+        {
+            ViewBag.Genres = await _genreService.GetAllGenresAsync();
+            ViewBag.Actors = await _actorService.GetAllActorsAsync();
         }
     }
 }

@@ -1,0 +1,32 @@
+@model IEnumerable<ActorDTO>
+
+<h2>Manage Actors</h2>
+<p>
+    <a asp-action="AddActor" class="btn btn-primary">Add New Actor</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Photo</th>
+            <th>Name</th>
+            <th>Bio</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var actor in Model)
+        {
+            <tr>
+                <td><img src="@actor.PhotoUrl" style="max-width: 100px;" /></td>
+                <td>@actor.Name</td>
+                <td>@actor.Bio</td>
+                <td>
+                    <a asp-action="EditActor" asp-route-id="@actor.ActorId" class="btn btn-warning">Edit</a>
+                    <form asp-action="DeleteActor" asp-route-id="@actor.ActorId" method="post" style="display: inline;">
+                        <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System;
 using Microsoft.Extensions.Logging;
+using Infrastructure.Interfaces;
+using Microsoft.EntityFrameworkCore.Query;
 
 namespace Infrastructure.Repositories
 {
@@ -32,23 +34,47 @@ namespace Infrastructure.Repositories
             return await _context.Sessions
                 .Include(s => s.Movie)
                 .Include(s => s.Hall)
+                .Include(s => s.Tickets)
                 .FirstOrDefaultAsync(s => s.SessionId == id);
         }
 
         public async Task<IEnumerable<Session>> GetAllWithIncludeAsync(
-            Func<IQueryable<Session>, IQueryable<Session>> include)
+            Func<IQueryable<Session>, IIncludableQueryable<Session, object>> include = null)
         {
-            try
+            IQueryable<Session> query = _context.Sessions;
+
+            if (include != null)
             {
-                var query = _context.Sessions.AsQueryable();
                 query = include(query);
-                return await query.ToListAsync();
             }
-            catch (Exception ex)
+
+            return await query.ToListAsync();
+        }
+
+        public async Task<IEnumerable<Session>> GetFutureSessionsAsync()
+        {
+            return await _context.Sessions
+                .Include(s => s.Movie)
+                .Include(s => s.Hall)
+                .Where(s => s.StartTime > DateTime.Now)
+                .OrderBy(s => s.StartTime)
+                .ToListAsync();
+        }
+
+        public async Task<bool> IsHallAvailableAsync(int hallId, DateTime startTime, DateTime endTime, int? excludeSessionId = null)
+        {
+            var query = _context.Sessions
+                .Where(s => s.HallId == hallId &&
+                           ((s.StartTime >= startTime && s.StartTime < endTime) ||
+                            (s.EndTime > startTime && s.EndTime <= endTime) ||
+                            (s.StartTime <= startTime && s.EndTime >= endTime)));
+
+            if (excludeSessionId.HasValue)
             {
-                _logger.LogError(ex, "Error getting sessions with includes");
-                throw;
+                query = query.Where(s => s.SessionId != excludeSessionId.Value);
             }
+
+            return !await query.AnyAsync();
         }
     }
 } 

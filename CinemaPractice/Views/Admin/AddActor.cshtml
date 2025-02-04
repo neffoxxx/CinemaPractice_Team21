@@ -1,0 +1,26 @@
+@model ActorDTO
+
+<h2>Add Actor</h2>
+
+<form asp-action="AddActor" method="post" enctype="multipart/form-data">
+    <div class="form-group">
+        <label asp-for="Name">Name</label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mt-3">
+        <label asp-for="Bio">Biography</label>
+        <textarea asp-for="Bio" class="form-control" rows="4"></textarea>
+        <span asp-validation-for="Bio" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mt-3">
+        <label asp-for="PhotoUrl">Photo URL</label>
+        <input asp-for="PhotoUrl" class="form-control" />
+        <span asp-validation-for="PhotoUrl" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-3">Add Actor</button>
+    <a asp-action="ManageActors" class="btn btn-secondary mt-3">Back to List</a>
+</form> 
