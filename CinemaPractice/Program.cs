@@ -14,6 +14,7 @@ using Infrastructure.Entities;
 using Infrastructure.Repositories;
 using Microsoft.Extensions.Configuration;
 using System;
+using Infrastructure.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,6 +40,8 @@ builder.Services.AddScoped<IMovieService, MovieService>();
 builder.Services.AddScoped<IHallService, HallService>();
 builder.Services.AddScoped<ITicketService, TicketService>();
 builder.Services.AddScoped<ISessionService, SessionService>();
+builder.Services.AddScoped<IActorService, ActorService>();
+builder.Services.AddScoped<IGenreService, GenreService>();
 
 // Configure Validators
 builder.Services.AddScoped<IValidator<MovieDTO>, MovieValidator>();

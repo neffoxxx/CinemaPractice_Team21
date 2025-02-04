@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.Collections.Generic;
 
 namespace AppCore.DTOs
 {
@@ -29,5 +30,7 @@ namespace AppCore.DTOs
 
         public int DurationMinutes { get; set; }
 
+        public List<int> SelectedGenreIds { get; set; } = new List<int>();
+        public List<int> SelectedActorIds { get; set; } = new List<int>();
     }
 }

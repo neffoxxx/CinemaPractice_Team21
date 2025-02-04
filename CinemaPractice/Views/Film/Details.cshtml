@@ -25,13 +25,62 @@
                 <dt class="col-sm-3">Rating</dt>
                 <dd class="col-sm-9">@Model.Rating.ToString("0.0", CultureInfo.InvariantCulture)</dd>
 
+                @if (Model.MovieGenres != null && Model.MovieGenres.Any())
+                {
+                    <dt class="col-sm-3">Genres</dt>
+                    <dd class="col-sm-9">
+                        @foreach (var movieGenre in Model.MovieGenres)
+                        {
+                            <span class="badge bg-primary me-1">@movieGenre.Genre.Name</span>
+                        }
+                    </dd>
+                }
+
+                @if (Model.MovieActors != null && Model.MovieActors.Any())
+                {
+                    <dt class="col-sm-12 mt-4">Cast</dt>
+                    <dd class="col-sm-12">
+                        <div class="row">
+                            @foreach (var movieActor in Model.MovieActors)
+                            {
+                                <div class="col-md-3 mb-3">
+                                    <div class="card h-100">
+                                        @if (!string.IsNullOrEmpty(movieActor.Actor.PhotoUrl))
+                                        {
+                                            <img src="@movieActor.Actor.PhotoUrl" 
+                                                 class="card-img-top" 
+                                                 alt="@movieActor.Actor.Name"
+                                                 style="height: 200px; object-fit: cover;">
+                                        }
+                                        else
+                                        {
+                                            <div class="card-img-top bg-secondary text-white d-flex align-items-center justify-content-center" 
+                                                 style="height: 200px;">
+                                                <i class="fas fa-user fa-3x"></i>
+                                            </div>
+                                        }
+                                        <div class="card-body text-center">
+                                            <h6 class="card-title mb-0">@movieActor.Actor.Name</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </dd>
+                }
+
                 @if (!string.IsNullOrEmpty(Model.TrailerUrl))
                 {
-                    <dt class="col-sm-3">Trailer</dt>
-                    <dd class="col-sm-9">
-                        <a href="@Model.TrailerUrl" target="_blank" class="btn btn-outline-primary">
-                            <i class="fas fa-play"></i> Watch Trailer
-                        </a>
+                    <dt class="col-sm-12 mt-4">Trailer</dt>
+                    <dd class="col-sm-12">
+                        <div class="ratio ratio-16x9">
+                            <iframe src="@GetEmbedUrl(Model.TrailerUrl)" 
+                                    title="YouTube video player" 
+                                    frameborder="0" 
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                    allowfullscreen>
+                            </iframe>
+                        </div>
                     </dd>
                 }
             </dl>
@@ -112,3 +161,25 @@
         </a>
     </div>
 </div>
+
+@functions {
+    private string GetEmbedUrl(string url)
+    {
+        if (string.IsNullOrEmpty(url)) return "";
+
+        // Handle youtube.com/watch?v= format
+        if (url.Contains("youtube.com/watch?v="))
+        {
+            var videoId = url.Split("watch?v=").Last().Split('&').First();
+            return $"https://www.youtube.com/embed/{videoId}";
+        }
+        // Handle youtu.be/ format
+        else if (url.Contains("youtu.be/"))
+        {
+            var videoId = url.Split("youtu.be/").Last().Split('?').First();
+            return $"https://www.youtube.com/embed/{videoId}";
+        }
+
+        return url;
+    }
+}

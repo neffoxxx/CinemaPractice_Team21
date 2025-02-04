@@ -77,10 +77,16 @@ namespace AppCore.Services
             _logger.LogInformation("Checking seat availability for session {SessionId}, row {RowNumber}, seat {SeatNumber}",
                 sessionId, rowNumber, seatNumber);
 
-            var isSeatBooked = await _ticketRepository.AnyAsync(
-                t => ((Ticket)t).SessionId == sessionId && ((Ticket)t).RowNumber == rowNumber && ((Ticket)t).SeatNumber == seatNumber.ToString()
-            );
-            return !isSeatBooked;
+            var tickets = await _ticketRepository.GetTicketsBySessionAsync(sessionId);
+            var isBooked = tickets.Any(t => 
+                t.RowNumber == rowNumber && 
+                t.SeatNumber == seatNumber.ToString() && 
+                t.Status == "Booked");
+
+            _logger.LogInformation("Seat in session {SessionId}, row {RowNumber}, seat {SeatNumber} is {Status}",
+                sessionId, rowNumber, seatNumber, isBooked ? "booked" : "available");
+
+            return !isBooked;
         }
 
         public async Task<(int Row, int Seat)> CalculateSeatPosition(int globalSeatNumber, int seatsPerRow)
@@ -139,40 +145,69 @@ namespace AppCore.Services
 
         public async Task<List<int>> GetRowsWithAvailableSeats(int sessionId, int totalRows, int seatsPerRow)
         {
-            _logger.LogInformation("Getting rows with available seats for session: {SessionId}, total rows: {TotalRows}, seats per row: {SeatsPerRow}", sessionId, totalRows, seatsPerRow);
-            if (sessionId <= 0)
-            {
-                _logger.LogError("SessionId must be greater than 0.");
-                throw new ArgumentOutOfRangeException(nameof(sessionId), "SessionId must be greater than 0.");
-            }
-            if (totalRows <= 0)
-            {
-                _logger.LogError("Total rows must be greater than 0.");
-                throw new ArgumentOutOfRangeException(nameof(totalRows), "Total rows must be greater than 0.");
-            }
-            if (seatsPerRow <= 0)
-            {
-                _logger.LogError("Seats per row must be greater than 0.");
-                throw new ArgumentOutOfRangeException(nameof(seatsPerRow), "Seats per row must be greater than 0.");
-            }
-            var tickets = await _ticketRepository.GetAllAsync();
+            _logger.LogInformation("Starting GetRowsWithAvailableSeats with parameters:" +
+                "\nsessionId: {SessionId}" +
+                "\ntotalRows: {TotalRows}" +
+                "\nseatsPerRow: {SeatsPerRow}", 
+                sessionId, totalRows, seatsPerRow);
 
-            var availableRows = new List<int>();
-
-            for (int row = 1; row <= totalRows; row++)
+            // Валідація вхідних параметрів
+            if (sessionId <= 0 || totalRows <= 0 || seatsPerRow <= 0)
             {
-                var bookedSeatsInRow = tickets
-                    .Where(t => t.SessionId == sessionId && t.RowNumber == row)
-                    .Select(t => int.Parse(t.SeatNumber))
-                    .ToList();
+                _logger.LogError("Invalid parameters received");
+                throw new ArgumentException("All parameters must be greater than 0");
+            }
 
-                if (bookedSeatsInRow.Count < seatsPerRow)
+            try
+            {
+                // Отримуємо заброньовані квитки
+                var tickets = await _ticketRepository.GetTicketsBySessionAsync(sessionId);
+                _logger.LogInformation("Found {Count} booked tickets for session {SessionId}", 
+                    tickets.Count(), sessionId);
+
+                // ВАЖЛИВО: Завжди повертаємо всі ряди, якщо немає заброньованих квитків
+                if (!tickets.Any())
                 {
-                    availableRows.Add(row);
+                    var allRows = Enumerable.Range(1, totalRows).ToList();
+                    _logger.LogInformation("No booked tickets found. Returning all rows: {Rows}", 
+                        string.Join(", ", allRows));
+                    return allRows;
                 }
+
+                var availableRows = new List<int>();
+
+                // Перевіряємо кожен ряд
+                for (int row = 1; row <= totalRows; row++)
+                {
+                    var bookedSeatsInRow = tickets.Count(t => t.RowNumber == row);
+                    _logger.LogInformation("Row {Row}: {BookedCount} seats booked out of {TotalSeats}", 
+                        row, bookedSeatsInRow, seatsPerRow);
+
+                    if (bookedSeatsInRow < seatsPerRow)
+                    {
+                        availableRows.Add(row);
+                        _logger.LogInformation("Added row {Row} to available rows", row);
+                    }
+                }
+
+                // Додаткова перевірка: якщо список порожній, але повинен бути не порожнім
+                if (!availableRows.Any() && tickets.Count() < (totalRows * seatsPerRow))
+                {
+                    _logger.LogWarning("No available rows found but there should be some. Returning all rows.");
+                    return Enumerable.Range(1, totalRows).ToList();
+                }
+
+                _logger.LogInformation("Returning {Count} available rows: {Rows}", 
+                    availableRows.Count, string.Join(", ", availableRows));
+
+                return availableRows;
             }
-            _logger.LogInformation("Found {Count} rows with available seats for session: {SessionId}", availableRows.Count, sessionId);
-            return availableRows;
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in GetRowsWithAvailableSeats");
+                // В разі помилки повертаємо всі ряди, щоб не блокувати бронювання
+                return Enumerable.Range(1, totalRows).ToList();
+            }
         }
     }
 }

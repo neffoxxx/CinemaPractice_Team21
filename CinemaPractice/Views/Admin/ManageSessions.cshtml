@@ -18,9 +18,9 @@
     <thead>
         <tr>
             <th>Movie</th>
+            <th>Hall</th>
             <th>Start Time</th>
             <th>End Time</th>
-            <th>Hall</th>
             <th>Price</th>
             <th>Actions</th>
         </tr>
@@ -31,12 +31,10 @@
             @foreach (var item in Model)
             {
                 <tr>
-                    <td>@item.Movies?.FirstOrDefault(m => m.Value == item.MovieId.ToString())?.Text @item.MovieId</td>
+                    <td>@item.MovieTitle</td>
+                    <td>@item.HallName</td>
                     <td>@item.StartTime.ToString("dd.MM.yyyy HH:mm")</td>
                     <td>@item.EndTime.ToString("dd.MM.yyyy HH:mm")</td>
-                    <td>
-                        @item.Halls?.FirstOrDefault(h => h.Value == item.HallId.ToString())?.Text @item.HallId
-                    </td>
                     <td>@item.Price.ToString("C")</td>
                     <td>
                         <div class="btn-group">

@@ -41,6 +41,19 @@
                         <div class="text-danger mt-2">
                             No seats available for this session.
                         </div>
+                        <div class="text-muted">
+                            Debug Info:
+                            <br />
+                            Session ID: @Model.SessionId
+                            <br />
+                            Total Rows: @Model.RowsCount
+                            <br />
+                            Seats Per Row: @Model.SeatsPerRow
+                            <br />
+                            Booked Seats Count: @(Model.BookedSeats?.Count ?? 0)
+                            <br />
+                            Available Rows: @(Model.AvailableRows == null ? "null" : string.Join(", ", Model.AvailableRows))
+                        </div>
                     }
                 </div>
 

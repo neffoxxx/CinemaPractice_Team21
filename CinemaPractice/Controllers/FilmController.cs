@@ -8,16 +8,20 @@ using System;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
+using Infrastructure.Interfaces;
+using AppCore.Services;
 
 namespace CinemaPractice.Controllers
 {
     public class FilmController : Controller
     {
+        private readonly IMovieService _movieService;
         private readonly IRepository<Movie> _movieRepository;
         private readonly ILogger<FilmController> _logger;
 
-        public FilmController(IRepository<Movie> movieRepository, ILogger<FilmController> logger)
+        public FilmController(IMovieService movieService, IRepository<Movie> movieRepository, ILogger<FilmController> logger)
         {
+            _movieService = movieService;
             _movieRepository = movieRepository;
             _logger = logger;
         }
@@ -41,9 +45,14 @@ namespace CinemaPractice.Controllers
                     return BadRequest();
                 }
 
-                var movie = await _movieRepository.GetByIdWithIncludeAsync(id, query => 
-                    query.Include(m => m.Sessions)
-                         .ThenInclude(s => s.Hall));
+                var movie = await _movieRepository.GetByIdWithIncludeAsync(id,
+                    query => query
+                        .Include(m => m.MovieGenres)
+                            .ThenInclude(mg => mg.Genre)
+                        .Include(m => m.MovieActors)
+                            .ThenInclude(ma => ma.Actor)
+                        .Include(m => m.Sessions)
+                            .ThenInclude(s => s.Hall));
 
                 if (movie == null)
                 {

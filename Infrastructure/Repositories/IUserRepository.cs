@@ -1,4 +1,5 @@
 using Infrastructure.Entities;
+using Infrastructure.Interfaces;
 
 public interface IUserRepository : IRepository<User>
 {

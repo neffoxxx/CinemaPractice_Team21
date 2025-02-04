@@ -1,5 +1,11 @@
 public class TicketBookingViewModel
 {
+    public TicketBookingViewModel()
+    {
+        BookedSeats = new List<string>();
+        AvailableRows = new List<int>();
+    }
+
     public int SessionId { get; set; }
     public string SeatNumber { get; set; }
     public decimal Price { get; set; }

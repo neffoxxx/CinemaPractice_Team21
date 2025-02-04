@@ -1,0 +1,28 @@
+@model IEnumerable<GenreDTO>
+
+<h2>Manage Genres</h2>
+<p>
+    <a asp-action="AddGenre" class="btn btn-primary">Add New Genre</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var genre in Model)
+        {
+            <tr>
+                <td>@genre.Name</td>
+                <td>
+                    <a asp-action="EditGenre" asp-route-id="@genre.GenreId" class="btn btn-warning">Edit</a>
+                    <form asp-action="DeleteGenre" asp-route-id="@genre.GenreId" method="post" style="display: inline;">
+                        <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table> 

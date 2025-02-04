@@ -6,7 +6,9 @@
     <thead>
         <tr>
             <th>Movie</th>
-            <th>Date & Time</th>
+            <th>Hall</th>
+            <th>Start Time</th>
+            <th>End Time</th>
             <th>Price</th>
             <th>Actions</th>
         </tr>
@@ -15,12 +17,15 @@
         @foreach (var session in Model)
         {
             <tr>
-                <td>@session.MovieId</td>
+                <td>@(session.Movie?.Title ?? "N/A")</td>
+                <td>@(session.Hall?.Name ?? "N/A")</td>
                 <td>@session.StartTime.ToString("dd/MM/yyyy HH:mm")</td>
+                <td>@session.EndTime.ToString("dd/MM/yyyy HH:mm")</td>
                 <td>@session.Price.ToString("C")</td>
                 <td>
                     <a asp-action="Details" asp-route-id="@session.SessionId" class="btn btn-info">Details</a>
                 </td>
+
             </tr>
         }
     </tbody>
