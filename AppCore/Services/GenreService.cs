@@ -1,7 +1,7 @@
 using AutoMapper;
 using Infrastructure.Entities;
 using Infrastructure.Interfaces;
-
+using AppCore.DTOs;
 public class GenreService : IGenreService
 {
     private readonly IRepository<Genre> _genreRepository;

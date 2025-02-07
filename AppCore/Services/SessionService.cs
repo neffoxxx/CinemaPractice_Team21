@@ -71,7 +71,7 @@ namespace AppCore.Services
         public async Task<SessionDTO> GetSessionByIdAsync(int id)
         {
             _logger.LogInformation("Getting session by id: {Id}", id);
-            var session = await _sessionRepository.GetByIdWithDetailsAsync(id);
+            var session = await _sessionRepository.GetByIdAsync(id);
             return _mapper.Map<SessionDTO>(session);
         }
 
@@ -80,6 +80,8 @@ namespace AppCore.Services
             _logger.LogInformation("Getting session details by id: {Id}", id);
             var session = await _sessionRepository.GetByIdWithDetailsAsync(id);
             var sessionDto = _mapper.Map<SessionDTO>(session);
+            sessionDto.MovieTitle = session.Movie?.Title;
+            sessionDto.HallName = session.Hall?.Name;
             return sessionDto;
         }
 
@@ -130,8 +132,8 @@ namespace AppCore.Services
 
             // Перевірка доступності залу
             var isHallAvailable = await _sessionRepository.IsHallAvailableAsync(
-                sessionDto.HallId, 
-                sessionDto.StartTime, 
+                sessionDto.HallId,
+                sessionDto.StartTime,
                 sessionDto.EndTime);
 
             if (!isHallAvailable)
@@ -187,9 +189,53 @@ namespace AppCore.Services
                  halls.Select(h => new SelectListItem { Value = h.HallId.ToString(), Text = h.Name }),
                 "Value", "Text");
         }
-    }
 
-    public interface ISessionService
+        public async Task<IEnumerable<SessionDTO>> GetFilteredSessionsAsync(DateTime? startDate, DateTime? endDate, int? genreId)
+        {
+            _logger.LogInformation("Getting filtered sessions with parameters: StartDate={StartDate}, EndDate={EndDate}, GenreId={GenreId}", startDate, endDate, genreId);
+
+            var sessions = await _sessionRepository.GetAllWithIncludeAsync(query => query
+                .Include(s => s.Movie)
+                .Include(s => s.Hall)
+                .Include(s => s.Movie.MovieGenres)
+                .ThenInclude(mg => mg.Genre));
+
+
+            // Apply filters using LINQ to Objects
+            if (startDate.HasValue)
+            {
+                sessions = sessions.Where(s => s.StartTime.Date >= startDate.Value.Date).ToList();
+            }
+
+            if (endDate.HasValue)
+            {
+                sessions = sessions.Where(s => s.EndTime.Date <= endDate.Value.Date).ToList();
+            }
+
+            if (genreId.HasValue)
+            {
+                sessions = sessions.Where(s => s.Movie.MovieGenres.Any(mg => mg.GenreId == genreId.Value)).ToList();
+            }
+
+            var sessionDtos = _mapper.Map<IEnumerable<SessionDTO>>(sessions);
+
+            foreach (var sessionDto in sessionDtos)
+            {
+                var sessionEntity = sessions.FirstOrDefault(s => s.SessionId == sessionDto.SessionId);
+
+                if (sessionEntity != null)
+                {
+                    sessionDto.MovieTitle = sessionEntity.Movie?.Title;
+                    sessionDto.HallName = sessionEntity.Hall?.Name;
+                }
+            }
+
+            return sessionDtos;
+        }
+    }
+}
+
+public interface ISessionService
     {
         Task<IEnumerable<SessionDTO>> GetAllSessionsAsync();
         Task<SessionDTO> GetSessionByIdAsync(int id);
@@ -199,5 +245,5 @@ namespace AppCore.Services
         Task UpdateSessionAsync(SessionDTO sessionDto);
         Task DeleteSessionAsync(int id);
         Task PopulateSessionSelectLists(SessionDTO model);
-    }
+         Task<IEnumerable<SessionDTO>> GetFilteredSessionsAsync(DateTime? startDate, DateTime? endDate, int? genreId);
 }
