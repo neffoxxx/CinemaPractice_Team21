@@ -10,10 +10,10 @@ namespace Infrastructure.Repositories
 {
     public interface ISessionRepository : IRepository<Session>
     {
-        new Task<Session> GetByIdAsync(int id);
-        Task<Session> GetByIdWithDetailsAsync(int id);
+        new Task<Session?> GetByIdAsync(int id);
+        Task<Session?> GetByIdWithDetailsAsync(int id);
         Task<IEnumerable<Session>> GetAllWithIncludeAsync(
-            Func<IQueryable<Session>, IIncludableQueryable<Session, object>> include = null);
+            Func<IQueryable<Session>, IIncludableQueryable<Session, object>>? include = null);
         Task<IEnumerable<Session>> GetFutureSessionsAsync();
         Task<bool> IsHallAvailableAsync(int hallId, DateTime startTime, DateTime endTime, int? excludeSessionId = null);
     }

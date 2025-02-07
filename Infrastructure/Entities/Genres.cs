@@ -2,10 +2,14 @@
 {
     public class Genre
     {
+        public Genre()
+        {
+            Name = string.Empty;
+            MovieGenres = new List<MovieGenre>();
+        }
+
         public int GenreId { get; set; }
-        public string Name { get; set; }
-
-        public ICollection<MovieGenre> MovieGenres { get; set; }
+        public required string Name { get; set; }
+        public required ICollection<MovieGenre> MovieGenres { get; set; }
     }
-
 }

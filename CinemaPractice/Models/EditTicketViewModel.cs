@@ -13,15 +13,15 @@ public class EditTicketViewModel
     
     [Required(ErrorMessage = "Seat number is required")]
     [RegularExpression(@"^\d+$", ErrorMessage = "Seat number must be a positive integer")]
-    public string SeatNumber { get; set; }
+    public required string SeatNumber { get; set; }
     
     [Required(ErrorMessage = "Status is required")]
-    public string Status { get; set; }
+    public required string Status { get; set; }
     
     public DateTime BookingTime { get; set; }
-    public string MovieTitle { get; set; }
-    public string UserName { get; set; }
+    public required string MovieTitle { get; set; }
+    public required string UserName { get; set; }
     public DateTime ShowTime { get; set; }
     public int HallId { get; set; }
-    public string HallName { get; set; }
+    public required string HallName { get; set; }
 } 

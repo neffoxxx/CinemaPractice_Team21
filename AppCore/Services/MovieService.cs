@@ -39,32 +39,35 @@ namespace AppCore.Services
             return _mapper.Map<IEnumerable<MovieDTO>>(movies);
         }
 
-        public async Task<MovieDTO> GetMovieByIdAsync(int id)
+        public async Task<MovieDTO?> GetMovieByIdAsync(int id)
         {
-            _logger.LogInformation("Getting movie by id: {Id}", id);
-            var movie = await _movieRepository.GetByIdWithIncludeAsync(id, 
-                query => query
-                    .Include(m => m.MovieGenres)
-                        .ThenInclude(mg => mg.Genre)
-                    .Include(m => m.MovieActors)
-                        .ThenInclude(ma => ma.Actor));
-
-            if (movie == null)
-                return null;
-
-            var movieDto = _mapper.Map<MovieDTO>(movie);
-            
-            if (movie.MovieGenres != null)
+            try
             {
-                movieDto.SelectedGenreIds = movie.MovieGenres.Select(mg => mg.GenreId).ToList();
+                _logger.LogInformation("Getting movie by ID: {Id}", id);
+
+                var movie = await _movieRepository.GetByIdWithIncludeAsync(id,
+                    query => query
+                        .Include(m => m.MovieGenres)
+                            .ThenInclude(mg => mg.Genre)
+                        .Include(m => m.MovieActors)
+                            .ThenInclude(ma => ma.Actor));
+
+                if (movie == null)
+                {
+                    _logger.LogWarning("Movie not found with ID: {Id}", id);
+                    return null;
+                }
+
+                var movieDto = _mapper.Map<MovieDTO>(movie);
+                _logger.LogInformation("Successfully retrieved movie: {Title}", movieDto.Title);
+                
+                return movieDto;
             }
-            
-            if (movie.MovieActors != null)
+            catch (Exception ex)
             {
-                movieDto.SelectedActorIds = movie.MovieActors.Select(ma => ma.ActorId).ToList();
+                _logger.LogError(ex, "Error getting movie by ID: {Id}", id);
+                throw;
             }
-            
-            return movieDto;
         }
 
         public async Task AddMovieAsync(MovieDTO movieDto)
@@ -74,17 +77,29 @@ namespace AppCore.Services
 
             if (movieDto.SelectedGenreIds != null)
             {
+                var genres = await _context.Genres
+                    .Where(g => movieDto.SelectedGenreIds.Contains(g.GenreId))
+                    .ToListAsync();
+
                 movie.MovieGenres = movieDto.SelectedGenreIds.Select(genreId => new MovieGenre
                 {
-                    GenreId = genreId
+                    GenreId = genreId,
+                    Movie = movie,
+                    Genre = genres.First(g => g.GenreId == genreId)
                 }).ToList();
             }
 
             if (movieDto.SelectedActorIds != null)
             {
+                var actors = await _context.Actors
+                    .Where(a => movieDto.SelectedActorIds.Contains(a.ActorId))
+                    .ToListAsync();
+
                 movie.MovieActors = movieDto.SelectedActorIds.Select(actorId => new MovieActor
                 {
-                    ActorId = actorId
+                    ActorId = actorId,
+                    Movie = movie,
+                    Actor = actors.First(a => a.ActorId == actorId)
                 }).ToList();
             }
 
@@ -110,20 +125,32 @@ namespace AppCore.Services
             _context.MovieGenres.RemoveRange(existingMovie.MovieGenres);
             if (movieDto.SelectedGenreIds != null)
             {
+                var genres = await _context.Genres
+                    .Where(g => movieDto.SelectedGenreIds.Contains(g.GenreId))
+                    .ToListAsync();
+
                 existingMovie.MovieGenres = movieDto.SelectedGenreIds.Select(genreId => new MovieGenre
                 {
                     MovieId = existingMovie.MovieId,
-                    GenreId = genreId
+                    GenreId = genreId,
+                    Movie = existingMovie,
+                    Genre = genres.First(g => g.GenreId == genreId)
                 }).ToList();
             }
 
             _context.MovieActors.RemoveRange(existingMovie.MovieActors);
             if (movieDto.SelectedActorIds != null)
             {
+                var actors = await _context.Actors
+                    .Where(a => movieDto.SelectedActorIds.Contains(a.ActorId))
+                    .ToListAsync();
+
                 existingMovie.MovieActors = movieDto.SelectedActorIds.Select(actorId => new MovieActor
                 {
                     MovieId = existingMovie.MovieId,
-                    ActorId = actorId
+                    ActorId = actorId,
+                    Movie = existingMovie,
+                    Actor = actors.First(a => a.ActorId == actorId)
                 }).ToList();
             }
 
@@ -140,7 +167,7 @@ namespace AppCore.Services
     public interface IMovieService
     {
         Task<IEnumerable<MovieDTO>> GetAllMoviesAsync();
-        Task<MovieDTO> GetMovieByIdAsync(int id);
+        Task<MovieDTO?> GetMovieByIdAsync(int id);
         Task AddMovieAsync(MovieDTO movieDto);
         Task UpdateMovieAsync(MovieDTO movieDto);
         Task DeleteMovieAsync(int id);

@@ -1,5 +1,9 @@
 public class TicketBookingViewModel
 {
+    public required string SeatNumber { get; set; } = string.Empty;
+    public required string MovieTitle { get; set; } = string.Empty;
+    public required string HallName { get; set; } = string.Empty;
+    
     public TicketBookingViewModel()
     {
         BookedSeats = new List<string>();
@@ -7,12 +11,9 @@ public class TicketBookingViewModel
     }
 
     public int SessionId { get; set; }
-    public string SeatNumber { get; set; }
     public decimal Price { get; set; }
     public DateTime ShowTime { get; set; }
-    public string MovieTitle { get; set; }
     public int HallId { get; set; }
-    public string HallName { get; set; }
     public int RowsCount { get; set; }
     public int SeatsPerRow { get; set; }
     public List<string> BookedSeats { get; set; } = new List<string>();

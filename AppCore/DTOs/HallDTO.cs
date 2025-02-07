@@ -8,7 +8,7 @@ namespace AppCore.DTOs
 
         [Required(ErrorMessage = "Name is required")]
         [StringLength(100, ErrorMessage = "Name cannot exceed 100 characters")]
-        public string Name { get; set; }
+        public required string Name { get; set; }
 
         [Required(ErrorMessage = "Capacity is required")]
         [Range(1, int.MaxValue, ErrorMessage = "Capacity must be greater than 0")]
@@ -24,6 +24,6 @@ namespace AppCore.DTOs
 
         public bool IsActive { get; set; }
 
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
     }
 }

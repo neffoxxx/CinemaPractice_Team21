@@ -10,6 +10,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using Infrastructure.Interfaces;
 using AppCore.Services;
+using Microsoft.EntityFrameworkCore.Query;
+using Infrastructure.Data;
 
 namespace CinemaPractice.Controllers
 {
@@ -18,12 +20,18 @@ namespace CinemaPractice.Controllers
         private readonly IMovieService _movieService;
         private readonly IRepository<Movie> _movieRepository;
         private readonly ILogger<FilmController> _logger;
+        private readonly CinemaDbContext _context;
 
-        public FilmController(IMovieService movieService, IRepository<Movie> movieRepository, ILogger<FilmController> logger)
+        public FilmController(
+            IMovieService movieService,
+            IRepository<Movie> movieRepository,
+            ILogger<FilmController> logger,
+            CinemaDbContext context)
         {
             _movieService = movieService;
             _movieRepository = movieRepository;
             _logger = logger;
+            _context = context;
         }
 
         public async Task<IActionResult> Index()
@@ -45,19 +53,26 @@ namespace CinemaPractice.Controllers
                     return BadRequest();
                 }
 
-                var movie = await _movieRepository.GetByIdWithIncludeAsync(id,
-                    query => query
-                        .Include(m => m.MovieGenres)
-                            .ThenInclude(mg => mg.Genre)
-                        .Include(m => m.MovieActors)
-                            .ThenInclude(ma => ma.Actor)
-                        .Include(m => m.Sessions)
-                            .ThenInclude(s => s.Hall));
+                var movie = await _context.Movies
+                    .Include(m => m.MovieGenres)
+                        .ThenInclude(mg => mg.Genre)
+                    .Include(m => m.MovieActors)
+                        .ThenInclude(ma => ma.Actor)
+                    .Include(m => m.Sessions)
+                        .ThenInclude(s => s.Hall)
+                    .FirstOrDefaultAsync(m => m.MovieId == id);
 
                 if (movie == null)
                 {
                     _logger.LogWarning("Movie with ID {Id} not found", id);
                     return NotFound();
+                }
+
+                // Validate that all required relationships are present
+                if (movie.Sessions.Any(s => s.Hall == null))
+                {
+                    _logger.LogError("Found session with null Hall reference for movie {Id}", id);
+                    throw new InvalidOperationException("Hall cannot be null");
                 }
 
                 _logger.LogInformation("Successfully retrieved movie: {Title}", movie.Title);

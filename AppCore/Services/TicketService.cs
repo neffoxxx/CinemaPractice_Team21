@@ -34,10 +34,10 @@ namespace AppCore.Services
         {
             _logger.LogInformation("Getting all tickets with related data");
             var tickets = await _ticketRepository.GetAllWithDetailsAsync();
-            return _mapper.Map<IEnumerable<TicketDTO>>(tickets);
+            return _mapper.Map<IEnumerable<TicketDTO>>(tickets) ?? Enumerable.Empty<TicketDTO>();
         }
 
-        public async Task<TicketDTO> GetTicketByIdAsync(int id)
+        public async Task<TicketDTO?> GetTicketByIdAsync(int id)
         {
             _logger.LogInformation("Getting ticket by ID: {Id}", id);
             var ticket = await _ticketRepository.GetByIdWithDetailsAsync(id);
@@ -91,6 +91,7 @@ namespace AppCore.Services
 
         public async Task<(int Row, int Seat)> CalculateSeatPosition(int globalSeatNumber, int seatsPerRow)
         {
+            await Task.CompletedTask; // Якщо немає реальних асинхронних операцій
             _logger.LogInformation("Calculating seat position for global seat number: {GlobalSeatNumber}, with seats per row: {SeatsPerRow}", globalSeatNumber, seatsPerRow);
             if (seatsPerRow <= 0)
             {

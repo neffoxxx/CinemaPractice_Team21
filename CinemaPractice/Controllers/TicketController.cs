@@ -91,13 +91,14 @@ namespace CinemaPractice.Controllers
                     SessionId = sessionId,
                     Price = session.Price,
                     ShowTime = session.StartTime,
-                    MovieTitle = session.Movie?.Title,
+                    MovieTitle = session.Movie?.Title ?? "Unknown Movie",
                     HallId = session.HallId,
-                    HallName = session.Hall?.Name,
-                    RowsCount = session.Hall.RowsCount,
-                    SeatsPerRow = session.Hall.SeatsPerRow,
+                    HallName = session.Hall?.Name ?? "Unknown Hall",
+                    RowsCount = session.Hall?.RowsCount ?? 0,
+                    SeatsPerRow = session.Hall?.SeatsPerRow ?? 0,
                     BookedSeats = bookedSeats,
-                    AvailableRows = availableRows  // Перевіряємо, чи не null тут
+                    AvailableRows = availableRows,
+                    SeatNumber = string.Empty
                 };
 
                 _logger.LogInformation("Created TicketBookingViewModel for session {SessionId}:" +
@@ -210,6 +211,27 @@ namespace CinemaPractice.Controllers
                 _logger.LogError(ex, "Error loading tickets for user");
                 return View(Enumerable.Empty<Ticket>());
             }
+        }
+
+        private async Task<IActionResult> SomeAction(Ticket ticket)
+        {
+            if (ticket?.Session?.Movie?.Title == null)
+            {
+                return NotFound();
+            }
+
+            var viewModel = new EditTicketViewModel
+            {
+                MovieTitle = ticket.Session.Movie.Title,
+                SeatNumber = ticket.SeatNumber,
+                Status = ticket.Status,
+                UserName = ticket.User?.Username ?? "Unknown User",
+                HallName = ticket.Session.Hall?.Name ?? "Unknown Hall"
+            };
+
+            await Task.CompletedTask;
+
+            return View(viewModel);
         }
     }
 }

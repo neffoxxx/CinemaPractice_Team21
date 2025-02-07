@@ -10,6 +10,7 @@ using Infrastructure.Repositories;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore.Query;
 
 namespace AppCore.Services
 {
@@ -39,9 +40,9 @@ namespace AppCore.Services
         {
             _logger.LogInformation("Getting all sessions with related data");
             var sessions = await _sessionRepository.GetAllWithIncludeAsync(
-                   query => query
-                       .Include(s => s.Movie)
-                       .Include(s => s.Hall));
+                query => query
+                    .Include(s => s.Movie)
+                    .Include(s => s.Hall) as IIncludableQueryable<Session, object>);
 
             if (sessions == null || !sessions.Any())
             {
@@ -83,28 +84,11 @@ namespace AppCore.Services
             return sessionDto;
         }
 
-        public async Task<SessionDTO> GetSessionForEditAsync(int id)
+        public async Task<SessionDTO?> GetSessionForEditAsync(int id)
         {
             _logger.LogInformation("Getting session for edit by id: {Id}", id);
             var session = await _sessionRepository.GetByIdWithDetailsAsync(id);
-            if (session == null)
-            {
-                _logger.LogWarning("Session not found, ID: {Id}", id);
-                return null;
-            }
-
-            var movies = await _movieRepository.GetAllAsync();
-            var halls = await _hallRepository.GetActiveHallsAsync();
-
-            var viewModel = _mapper.Map<SessionDTO>(session);
-            viewModel.Movies = new SelectList(
-                 movies.Select(m => new SelectListItem { Value = m.MovieId.ToString(), Text = m.Title }),
-                  "Value", "Text", session.MovieId.ToString());
-            viewModel.Halls = new SelectList(
-                halls.Select(h => new SelectListItem { Value = h.HallId.ToString(), Text = h.Name }),
-                 "Value", "Text", session.HallId.ToString());
-
-            return viewModel;
+            return session == null ? null : _mapper.Map<SessionDTO>(session);
         }
 
         public async Task AddSessionAsync(SessionDTO sessionDto)
@@ -194,7 +178,7 @@ namespace AppCore.Services
         Task<IEnumerable<SessionDTO>> GetAllSessionsAsync();
         Task<SessionDTO> GetSessionByIdAsync(int id);
         Task<SessionDTO> GetSessionByIdWithDetailsAsync(int id);
-        Task<SessionDTO> GetSessionForEditAsync(int id);
+        Task<SessionDTO?> GetSessionForEditAsync(int id);
         Task AddSessionAsync(SessionDTO sessionDto);
         Task UpdateSessionAsync(SessionDTO sessionDto);
         Task DeleteSessionAsync(int id);

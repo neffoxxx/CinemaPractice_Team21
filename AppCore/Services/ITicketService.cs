@@ -5,7 +5,7 @@ namespace AppCore.Services
     public interface ITicketService
     {
         Task<IEnumerable<TicketDTO>> GetAllTicketsAsync();
-        Task<TicketDTO> GetTicketByIdAsync(int id);
+        Task<TicketDTO?> GetTicketByIdAsync(int id);
         Task UpdateTicketAsync(TicketDTO ticketDto);
         Task DeleteTicketAsync(int id);
         Task<bool> IsSeatAvailable(int sessionId, int rowNumber, int seatNumber);

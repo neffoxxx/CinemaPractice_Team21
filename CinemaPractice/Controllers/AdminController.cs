@@ -55,14 +55,29 @@ namespace CinemaPractice.Controllers
 
         public async Task<IActionResult> ManageFilms()
         {
-            var films = await _movieService.GetAllMoviesAsync();
-            return View(films);
+            try
+            {
+                var movies = await _movieService.GetAllMoviesAsync();
+                return View(movies);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading movies list");
+                TempData["Error"] = "An error occurred while loading the movies list.";
+                return View(new List<MovieDTO>());
+            }
         }
 
         public async Task<IActionResult> AddFilm()
         {
             await LoadGenresAndActors();
-            return View(new MovieDTO());
+            return View(new MovieDTO 
+            { 
+                Title = string.Empty,
+                Description = string.Empty,
+                Director = string.Empty,
+                ReleaseDate = DateTime.Today
+            });
         }
 
         [HttpPost]
@@ -160,38 +175,76 @@ namespace CinemaPractice.Controllers
 
         public async Task<IActionResult> EditFilm(int id)
         {
-            var movie = await _movieService.GetMovieByIdAsync(id);
-            if (movie == null)
+            try
             {
-                return NotFound();
-            }
+                _logger.LogInformation("Loading movie for editing, ID: {Id}", id);
 
-            ViewBag.Genres = await _genreService.GetAllGenresAsync();
-            ViewBag.Actors = await _actorService.GetAllActorsAsync();
-
-            return View(movie);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> EditFilm(MovieDTO movieDto)
-        {
-            if (ModelState.IsValid)
-            {
+                // Load related data first
                 try
                 {
-                    await _movieService.UpdateMovieAsync(movieDto);
-                    return RedirectToAction(nameof(ManageFilms));
+                    await LoadGenresAndActors();
                 }
                 catch (Exception ex)
                 {
-                    ModelState.AddModelError("", "An error occurred while updating the movie.");
-                    _logger.LogError(ex, "Error updating movie");
+                    _logger.LogError(ex, "Error loading genres and actors");
+                    TempData["Error"] = "Error loading genres and actors data.";
+                    return RedirectToAction(nameof(ManageFilms));
                 }
-            }
 
-            ViewBag.Genres = await _genreService.GetAllGenresAsync();
-            ViewBag.Actors = await _actorService.GetAllActorsAsync();
-            return View(movieDto);
+                // Get the movie
+                var movie = await _movieService.GetMovieByIdAsync(id);
+                if (movie == null)
+                {
+                    _logger.LogWarning("Movie not found, ID: {Id}", id);
+                    TempData["Error"] = $"Movie with ID {id} not found.";
+                    return RedirectToAction(nameof(ManageFilms));
+                }
+
+                _logger.LogInformation("Successfully loaded movie for editing: {Title} (ID: {Id})", movie.Title, id);
+                return View(movie);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading movie for editing, ID: {Id}. Error: {Message}", id, ex.Message);
+                TempData["Error"] = $"Error loading movie: {ex.Message}";
+                return RedirectToAction(nameof(ManageFilms));
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditFilm(MovieDTO movieDto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    await LoadGenresAndActors();
+                    return View(movieDto);
+                }
+
+                var validationResult = await _movieValidator.ValidateAsync(movieDto);
+                if (!validationResult.IsValid)
+                {
+                    foreach (var error in validationResult.Errors)
+                    {
+                        ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+                    }
+                    await LoadGenresAndActors();
+                    return View(movieDto);
+                }
+
+                await _movieService.UpdateMovieAsync(movieDto);
+                TempData["Success"] = "Movie updated successfully.";
+                return RedirectToAction(nameof(ManageFilms));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating movie {MovieId}: {Message}", movieDto.MovieId, ex.Message);
+                TempData["Error"] = $"Error updating movie: {ex.Message}";
+                await LoadGenresAndActors();
+                return View(movieDto);
+            }
         }
 
         [HttpGet]
@@ -199,48 +252,69 @@ namespace CinemaPractice.Controllers
         {
             try
             {
-                var sessionDto = await _sessionService.GetSessionForEditAsync(id);
-                if (sessionDto == null)
+                var session = await _sessionService.GetSessionByIdAsync(id);
+                if (session == null)
                 {
                     return NotFound();
                 }
-                return View(sessionDto);
+
+                // Get all movies and halls for dropdowns
+                var movies = await _movieService.GetAllMoviesAsync();
+                var halls = await _hallService.GetAllHallsAsync();
+
+                // Populate SelectLists
+                session.Movies = new SelectList(movies, "MovieId", "Title", session.MovieId);
+                session.Halls = new SelectList(halls, "HallId", "Name", session.HallId);
+
+                return View(session);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error loading session for edit");
-                TempData["Error"] = "Error loading session: " + ex.Message;
+                _logger.LogError(ex, "Error loading session for editing");
+                TempData["Error"] = "Error loading session data.";
                 return RedirectToAction(nameof(ManageSessions));
             }
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditSession(SessionDTO sessionDto)
+        public async Task<IActionResult> EditSession(SessionDTO sessionDTO)
         {
-            var validationResult = await _sessionValidator.ValidateAsync(sessionDto);
-            if (!validationResult.IsValid)
-            {
-                await _sessionService.PopulateSessionSelectLists(sessionDto);
-                foreach (var error in validationResult.Errors)
-                {
-                    ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
-                }
-                return View(sessionDto);
-            }
-
             try
             {
-                await _sessionService.UpdateSessionAsync(sessionDto);
-                TempData["Success"] = "Session updated successfully";
+                if (!ModelState.IsValid)
+                {
+                    // Repopulate dropdowns if validation fails
+                    var movies = await _movieService.GetAllMoviesAsync();
+                    var halls = await _hallService.GetAllHallsAsync();
+                    sessionDTO.Movies = new SelectList(movies, "MovieId", "Title", sessionDTO.MovieId);
+                    sessionDTO.Halls = new SelectList(halls, "HallId", "Name", sessionDTO.HallId);
+                    return View(sessionDTO);
+                }
+
+                // Get movie duration to calculate EndTime
+                var movie = await _movieService.GetMovieByIdAsync(sessionDTO.MovieId);
+                if (movie != null)
+                {
+                    sessionDTO.EndTime = sessionDTO.StartTime.AddMinutes(movie.DurationMinutes);
+                }
+
+                await _sessionService.UpdateSessionAsync(sessionDTO);
+                TempData["Success"] = "Session updated successfully.";
                 return RedirectToAction(nameof(ManageSessions));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating session");
-                ModelState.AddModelError("", "Error updating session: " + ex.Message);
-                await _sessionService.PopulateSessionSelectLists(sessionDto);
-                return View(sessionDto);
+                ModelState.AddModelError("", "Error updating session.");
+                
+                // Repopulate dropdowns
+                var movies = await _movieService.GetAllMoviesAsync();
+                var halls = await _hallService.GetAllHallsAsync();
+                sessionDTO.Movies = new SelectList(movies, "MovieId", "Title", sessionDTO.MovieId);
+                sessionDTO.Halls = new SelectList(halls, "HallId", "Name", sessionDTO.HallId);
+                
+                return View(sessionDTO);
             }
         }
 
@@ -280,9 +354,13 @@ namespace CinemaPractice.Controllers
 
             try
             {
-
                 // Перевіряємо, чи змінилося місце
                 var oldTicket = await _ticketService.GetTicketByIdAsync(model.TicketId);
+                if (oldTicket == null)
+                {
+                    ModelState.AddModelError("", "Ticket not found");
+                    return View(model);
+                }
 
                 if (oldTicket.RowNumber != model.RowNumber || oldTicket.SeatNumber != model.SeatNumber)
                 {
@@ -337,7 +415,14 @@ namespace CinemaPractice.Controllers
         }
         public IActionResult AddHall()
         {
-            return View(new HallDTO { IsActive = true });
+            return View(new HallDTO 
+            { 
+                Name = string.Empty,
+                IsActive = true,
+                Capacity = 0,
+                RowsCount = 0,
+                SeatsPerRow = 0
+            });
         }
 
         [HttpPost]
@@ -432,7 +517,10 @@ namespace CinemaPractice.Controllers
 
         public IActionResult AddActor()
         {
-            return View(new ActorDTO());
+            return View(new ActorDTO 
+            { 
+                Name = string.Empty
+            });
         }
 
         [HttpPost]
@@ -486,7 +574,10 @@ namespace CinemaPractice.Controllers
 
         public IActionResult AddGenre()
         {
-            return View(new GenreDTO());
+            return View(new GenreDTO 
+            { 
+                Name = string.Empty
+            });
         }
 
         [HttpPost]
@@ -533,8 +624,27 @@ namespace CinemaPractice.Controllers
 
         private async Task LoadGenresAndActors()
         {
-            ViewBag.Genres = await _genreService.GetAllGenresAsync();
-            ViewBag.Actors = await _actorService.GetAllActorsAsync();
+            try
+            {
+                var genres = await _genreService.GetAllGenresAsync();
+                var actors = await _actorService.GetAllActorsAsync();
+
+                if (genres == null || actors == null)
+                {
+                    throw new InvalidOperationException("Failed to load genres or actors");
+                }
+
+                ViewBag.Genres = genres;
+                ViewBag.Actors = actors;
+
+                _logger.LogInformation("Successfully loaded {GenresCount} genres and {ActorsCount} actors", 
+                    genres.Count(), actors.Count());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in LoadGenresAndActors");
+                throw; // Re-throw to be handled by the calling method
+            }
         }
     }
 }

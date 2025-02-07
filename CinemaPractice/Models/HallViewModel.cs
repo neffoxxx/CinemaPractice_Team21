@@ -5,8 +5,7 @@ public class HallViewModel
     public int HallId { get; set; }
 
     [Required(ErrorMessage = "Name is required")]
-    [StringLength(50, ErrorMessage = "Name cannot be longer than 50 characters")]
-    public string Name { get; set; }
+    public required string Name { get; set; }
 
     [Required(ErrorMessage = "Capacity is required")]
     [Range(1, 1000, ErrorMessage = "Capacity must be between 1 and 1000")]
@@ -22,6 +21,6 @@ public class HallViewModel
 
     public bool IsActive { get; set; }
 
-    [StringLength(500, ErrorMessage = "Description cannot be longer than 500 characters")]
-    public string Description { get; set; }
+    [Required(ErrorMessage = "Description is required")]
+    public required string Description { get; set; } = string.Empty;
 } 

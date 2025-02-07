@@ -16,8 +16,10 @@ namespace AppCore.Mapping
             CreateMap<MovieDTO, Movie>();
 
             CreateMap<Session, SessionDTO>()
-                .ForMember(dest => dest.MovieTitle, opt => opt.MapFrom(src => src.Movie.Title))
-                .ForMember(dest => dest.HallName, opt => opt.MapFrom(src => src.Hall.Name));
+                .ForMember(dest => dest.MovieTitle, opt => opt.MapFrom(src => 
+                    src.Movie != null ? src.Movie.Title : string.Empty))
+                .ForMember(dest => dest.HallName, opt => opt.MapFrom(src => 
+                    src.Hall != null ? src.Hall.Name : string.Empty));
 
             CreateMap<SessionDTO, Session>()
                 .ForMember(dest => dest.Movie, opt => opt.Ignore())
@@ -26,11 +28,16 @@ namespace AppCore.Mapping
                 .ForMember(dest => dest.HallId, opt => opt.MapFrom(src => src.HallId));
 
             CreateMap<Ticket, TicketDTO>()
-                .ForMember(dest => dest.MovieTitle, opt => opt.MapFrom(src => src.Session.Movie.Title))
-                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User.Username))
-                .ForMember(dest => dest.ShowTime, opt => opt.MapFrom(src => src.Session.StartTime))
-                .ForMember(dest => dest.HallId, opt => opt.MapFrom(src => src.Session.HallId))
-                .ForMember(dest => dest.HallName, opt => opt.MapFrom(src => src.Session.Hall.Name))
+                .ForMember(dest => dest.MovieTitle, opt => opt.MapFrom((src, _, _, context) => 
+                    src.Session != null && src.Session.Movie != null ? src.Session.Movie.Title : string.Empty))
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom((src, _, _, context) => 
+                    src.User != null ? src.User.Username : string.Empty))
+                .ForMember(dest => dest.ShowTime, opt => opt.MapFrom((src, _, _, context) => 
+                    src.Session != null ? src.Session.StartTime : DateTime.MinValue))
+                .ForMember(dest => dest.HallId, opt => opt.MapFrom((src, _, _, context) => 
+                    src.Session != null ? src.Session.HallId : 0))
+                .ForMember(dest => dest.HallName, opt => opt.MapFrom((src, _, _, context) => 
+                    src.Session != null && src.Session.Hall != null ? src.Session.Hall.Name : string.Empty))
                 .ReverseMap();
             CreateMap<Hall, HallDTO>().ReverseMap();
             CreateMap<Actor, ActorDTO>().ReverseMap();

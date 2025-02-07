@@ -1,6 +1,28 @@
 @model Infrastructure.Entities.Movie
 @using System.Globalization
 
+@{
+    string GetEmbedUrl(string url)
+    {
+        if (string.IsNullOrEmpty(url)) return "";
+
+        // Handle youtube.com/watch?v= format
+        if (url.Contains("youtube.com/watch?v="))
+        {
+            var videoId = url.Split("watch?v=").Last().Split('&').First();
+            return $"https://www.youtube.com/embed/{videoId}";
+        }
+        // Handle youtu.be/ format
+        else if (url.Contains("youtu.be/"))
+        {
+            var videoId = url.Split("youtu.be/").Last().Split('?').First();
+            return $"https://www.youtube.com/embed/{videoId}";
+        }
+
+        return url;
+    }
+}
+
 <div class="container mt-4">
     <div class="row">
         <div class="col-md-4">
@@ -161,25 +183,3 @@
         </a>
     </div>
 </div>
-
-@functions {
-    private string GetEmbedUrl(string url)
-    {
-        if (string.IsNullOrEmpty(url)) return "";
-
-        // Handle youtube.com/watch?v= format
-        if (url.Contains("youtube.com/watch?v="))
-        {
-            var videoId = url.Split("watch?v=").Last().Split('&').First();
-            return $"https://www.youtube.com/embed/{videoId}";
-        }
-        // Handle youtu.be/ format
-        else if (url.Contains("youtu.be/"))
-        {
-            var videoId = url.Split("youtu.be/").Last().Split('?').First();
-            return $"https://www.youtube.com/embed/{videoId}";
-        }
-
-        return url;
-    }
-}
