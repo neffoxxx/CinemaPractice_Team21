@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using AppCore.Services.Interfaces;
 
 namespace CinemaPractice.Controllers
 {

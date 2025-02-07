@@ -12,6 +12,8 @@ using Infrastructure.Interfaces;
 using AppCore.Services;
 using Microsoft.EntityFrameworkCore.Query;
 using Infrastructure.Data;
+using AppCore.ViewModels;
+using AppCore.Services.Interfaces;
 
 namespace CinemaPractice.Controllers
 {
@@ -21,22 +23,28 @@ namespace CinemaPractice.Controllers
         private readonly IRepository<Movie> _movieRepository;
         private readonly ILogger<FilmController> _logger;
         private readonly CinemaDbContext _context;
+        private readonly ISessionService _sessionService;
 
         public FilmController(
             IMovieService movieService,
             IRepository<Movie> movieRepository,
             ILogger<FilmController> logger,
-            CinemaDbContext context)
+            CinemaDbContext context,
+            ISessionService sessionService)
         {
             _movieService = movieService;
             _movieRepository = movieRepository;
             _logger = logger;
             _context = context;
+            _sessionService = sessionService;
         }
 
         public async Task<IActionResult> Index()
         {
-            var movies = await _movieRepository.GetAllAsync();
+            var movies = await _context.Movies
+                .Include(m => m.MovieGenres)
+                    .ThenInclude(mg => mg.Genre)
+                .ToListAsync();
             return View(movies);
         }
 
@@ -68,12 +76,10 @@ namespace CinemaPractice.Controllers
                     return NotFound();
                 }
 
-                // Validate that all required relationships are present
-                if (movie.Sessions.Any(s => s.Hall == null))
-                {
-                    _logger.LogError("Found session with null Hall reference for movie {Id}", id);
-                    throw new InvalidOperationException("Hall cannot be null");
-                }
+                var sessions = await _sessionService.GetSessionViewModelsByFilmIdAsync(id);
+                var allTicketsBooked = sessions.All(session => session.SeatNumbers.Count >= session.Capacity);
+
+                ViewData["AllTicketsBooked"] = allTicketsBooked;
 
                 _logger.LogInformation("Successfully retrieved movie: {Title}", movie.Title);
                     

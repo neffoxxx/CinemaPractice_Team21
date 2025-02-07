@@ -84,6 +84,11 @@
                                         <div class="card-body text-center">
                                             <h6 class="card-title mb-0">@movieActor.Actor.Name</h6>
                                         </div>
+                                        <div class="mt-3 text-center">
+                                            <a asp-action="Details" asp-controller="Actor" asp-route-id="@movieActor.Actor.ActorId" asp-route-movieId="@Model.MovieId" class="btn btn-primary align-items-center justify-content-center">
+                                                <i class="fas fa-info-circle"></i> Details
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
                             }
@@ -121,46 +126,55 @@
                     .Where(s => s.StartTime > DateTime.Now)
                     .OrderBy(s => s.StartTime)
                     .ToList();
-                
-                @* Додаткова діагностична інформація *@
-                <div class="alert alert-info">
-                    <p>Future sessions found: @futureSessions.Count</p>
-                </div>
+
+                var availableSessions = futureSessions.Where(s => 
+                    s.Tickets == null || 
+                    s.Hall == null || 
+                    s.Tickets.Count < s.Hall.Capacity).ToList();
 
                 @if (futureSessions.Any())
                 {
-                    <table class="table table-hover">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Date</th>
-                                <th>Start Time</th>
-                                <th>End Time</th>
-                                <th>Hall</th>
-                                <th>Price</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var session in futureSessions)
-                            {
+                    @if (availableSessions.Any())
+                    {
+                        <table class="table table-hover">
+                            <thead class="table-light">
                                 <tr>
-                                    <td>@session.StartTime.ToString("dd.MM.yyyy")</td>
-                                    <td>@session.StartTime.ToString("HH:mm")</td>
-                                    <td>@session.EndTime.ToString("HH:mm")</td>
-                                    <td>@(session.Hall?.Name ?? "N/A")</td>
-                                    <td>@session.Price.ToString("C")</td>
-                                    <td>
-                                        <a asp-controller="Ticket" 
-                                           asp-action="Book" 
-                                           asp-route-sessionId="@session.SessionId" 
-                                           class="btn btn-primary">
-                                            Buy Ticket
-                                        </a>
-                                    </td>
+                                    <th>Date</th>
+                                    <th>Start Time</th>
+                                    <th>End Time</th>
+                                    <th>Hall</th>
+                                    <th>Price</th>
+                                    <th>Action</th>
                                 </tr>
-                            }
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                @foreach (var session in availableSessions)
+                                {
+                                    <tr>
+                                        <td>@session.StartTime.ToString("dd.MM.yyyy")</td>
+                                        <td>@session.StartTime.ToString("HH:mm")</td>
+                                        <td>@session.EndTime.ToString("HH:mm")</td>
+                                        <td>@(session.Hall?.Name ?? "N/A")</td>
+                                        <td>@session.Price.ToString("C")</td>
+                                        <td>
+                                            <a asp-controller="Ticket" 
+                                               asp-action="Book" 
+                                               asp-route-sessionId="@session.SessionId" 
+                                               class="btn btn-primary">
+                                                Buy Ticket
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> No available seats for current sessions.
+                        </div>
+                    }
                 }
                 else
                 {
@@ -175,7 +189,6 @@
                     <i class="fas fa-info-circle"></i> No sessions available for this movie at the moment.
                 </div>
             }
-        </div>
     </div>
     <div class="mt-3">
         <a asp-action="Index" class="btn btn-secondary">

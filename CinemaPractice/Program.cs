@@ -15,6 +15,7 @@ using Infrastructure.Repositories;
 using Microsoft.Extensions.Configuration;
 using System;
 using Infrastructure.Interfaces;
+using AppCore.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 

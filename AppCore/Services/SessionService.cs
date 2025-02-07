@@ -11,6 +11,9 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore.Query;
+using Infrastructure.Data;
+using AppCore.ViewModels;
+using AppCore.Services.Interfaces;
 
 namespace AppCore.Services
 {
@@ -21,19 +24,22 @@ namespace AppCore.Services
         private readonly IHallRepository _hallRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<SessionService> _logger;
+        private readonly CinemaDbContext _context;
 
         public SessionService(
             ISessionRepository sessionRepository,
             IRepository<Movie> movieRepository,
             IHallRepository hallRepository,
             IMapper mapper,
-            ILogger<SessionService> logger)
+            ILogger<SessionService> logger,
+            CinemaDbContext context)
         {
             _sessionRepository = sessionRepository;
             _movieRepository = movieRepository;
             _hallRepository = hallRepository;
             _mapper = mapper;
             _logger = logger;
+            _context = context;
         }
 
         public async Task<IEnumerable<SessionDTO>> GetAllSessionsAsync()
@@ -171,17 +177,33 @@ namespace AppCore.Services
                  halls.Select(h => new SelectListItem { Value = h.HallId.ToString(), Text = h.Name }),
                 "Value", "Text");
         }
-    }
 
-    public interface ISessionService
-    {
-        Task<IEnumerable<SessionDTO>> GetAllSessionsAsync();
-        Task<SessionDTO> GetSessionByIdAsync(int id);
-        Task<SessionDTO> GetSessionByIdWithDetailsAsync(int id);
-        Task<SessionDTO?> GetSessionForEditAsync(int id);
-        Task AddSessionAsync(SessionDTO sessionDto);
-        Task UpdateSessionAsync(SessionDTO sessionDto);
-        Task DeleteSessionAsync(int id);
-        Task PopulateSessionSelectLists(SessionDTO model);
+        public async Task<IEnumerable<Session>> GetSessionsByFilmIdAsync(int filmId)
+        {
+            return await _context.Sessions
+                .Include(s => s.Movie)
+                .Include(s => s.Hall)
+                .Include(s => s.Tickets)
+                .Where(s => s.MovieId == filmId)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<SessionViewModel>> GetSessionViewModelsByFilmIdAsync(int filmId)
+        {
+            var sessions = await GetSessionsByFilmIdAsync(filmId);
+            return sessions.Select(session => new SessionViewModel
+            {
+                SessionId = session.SessionId,
+                MovieId = session.MovieId,
+                HallId = session.HallId,
+                StartTime = session.StartTime,
+                EndTime = session.EndTime,
+                Price = session.Price,
+                MovieTitle = session.Movie?.Title,
+                HallName = session.Hall?.Name,
+                SeatNumbers = session.Tickets?.Select(t => t.SeatNumber.ToString()).ToList() ?? new List<string>(),
+                Capacity = session.Hall?.Capacity ?? 0
+            });
+        }
     }
 }

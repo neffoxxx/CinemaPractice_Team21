@@ -1,16 +1,38 @@
 @model IEnumerable<Infrastructure.Entities.Movie>
 
-<h2>Films</h2>
+<h2 class="text-center my-4">Films</h2>
 
 <div class="row">
     @foreach (var movie in Model)
     {
-        <div class="col-md-4 mb-4">
-            <div class="card">
+        <div class="col-md-3 mb-4">
+            <div class="card h-100">
+                @if (!string.IsNullOrEmpty(movie.PosterUrl))
+                {
+                    <img src="@movie.PosterUrl" class="card-img-top" alt="@movie.Title" style="height: 450px; width: 100%; object-fit: cover;">
+                }
+                else
+                {
+                    <img src="/images/default-movie-poster.jpg" class="card-img-top" alt="Default poster" style="height: 450px; width: 100%; object-fit: cover;">
+                }
                 <div class="card-body">
                     <h5 class="card-title">@movie.Title</h5>
-                    <p class="card-text">@movie.Description</p>
-                    <p class="card-text">Duration: @movie.DurationMinutes minutes</p>
+                    <p class="card-text">
+                        Rating: @movie.Rating.ToString("0.0")
+                    </p>
+                    <p class="card-text">
+                        <small class="text-muted">
+                            Genres: 
+                            @if (movie.MovieGenres != null && movie.MovieGenres.Any())
+                            {
+                                @string.Join(", ", movie.MovieGenres.Select(mg => mg.Genre.Name))
+                            }
+                            else
+                            {
+                                <span>No genres specified</span>
+                            }
+                        </small>
+                    </p>
                     <a href="@Url.Action("Details", "Film", new { id = movie.MovieId })" 
                        class="btn btn-primary">Details</a>
                 </div>
@@ -18,3 +40,28 @@
         </div>
     }
 </div>
+
+@section Styles {
+    <style>
+        .card {
+            transition: transform 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        .card-title {
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .card-img-top {
+            object-position: center top;
+        }
+    </style>
+}
