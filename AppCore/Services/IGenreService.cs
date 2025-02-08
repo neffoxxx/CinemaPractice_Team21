@@ -1,3 +1,4 @@
+using AppCore.DTOs; 
 public interface IGenreService
 {
     Task<IEnumerable<GenreDTO>> GetAllGenresAsync();
