@@ -1,6 +1,48 @@
-@model IEnumerable<Infrastructure.Entities.Session>
+@model IEnumerable<AppCore.DTOs.SessionDTO>
+
+@{
+    ViewData["Title"] = "Sessions";
+}
 
 <h2>Sessions</h2>
+<!-- Toggle Button for Collapsible Filter -->
+<button class="btn btn-success btn-sm mb-2" type="button" data-bs-toggle="collapse" data-bs-target="#filterForm" aria-expanded="false" aria-controls="filterForm">
+    Filter
+</button>
+
+<!-- Compact Collapsible Filter Form -->
+<div class="collapse" id="filterForm">
+    <form asp-action="Index" method="get" class="card card-body p-2">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label for="startDate" class="form-label small">Start Date:</label>
+                <input type="date" class="form-control form-control-sm" id="startDate" name="startDate" value="@(Context.Request.Query["startDate"])" />
+            </div>
+
+            <div class="col-md-3">
+                <label for="endDate" class="form-label small">End Date:</label>
+                <input type="date" class="form-control form-control-sm" id="endDate" name="endDate" value="@(Context.Request.Query["endDate"])" />
+            </div>
+
+            <div class="col-md-3">
+                <label for="genreId" class="form-label small">Genre:</label>
+                <select class="form-select form-select-sm" id="genreId" name="genreId">
+                    <option value="">All Genres</option>
+                    @foreach (var genre in (List<AppCore.DTOs.GenreDTO>)ViewBag.Genres)
+                    {
+                        var isSelected = Context.Request.Query["genreId"] == genre.GenreId.ToString();
+                        <option value="@genre.GenreId" selected="@(isSelected ? "selected" : null)">@genre.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3 d-grid">
+                <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<br />
 
 <table class="table">
     <thead>
@@ -17,15 +59,14 @@
         @foreach (var session in Model)
         {
             <tr>
-                <td>@(session.Movie?.Title ?? "N/A")</td>
-                <td>@(session.Hall?.Name ?? "N/A")</td>
+                <td>@session.MovieTitle</td>
+                <td>@session.HallName</td>
                 <td>@session.StartTime.ToString("dd/MM/yyyy HH:mm")</td>
                 <td>@session.EndTime.ToString("dd/MM/yyyy HH:mm")</td>
                 <td>@session.Price.ToString("C")</td>
                 <td>
                     <a asp-action="Details" asp-route-id="@session.SessionId" class="btn btn-info">Details</a>
                 </td>
-
             </tr>
         }
     </tbody>

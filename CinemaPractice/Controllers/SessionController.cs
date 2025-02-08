@@ -5,37 +5,38 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Infrastructure.Data;
+using AppCore.Services; // Import Session Service
+using AppCore.DTOs;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace CinemaPractice.Controllers
 {
     public class SessionController : Controller
     {
-        private readonly IRepository<Session> _sessionRepository;
-        private readonly CinemaDbContext _context;
+        private readonly ISessionService _sessionService;
+        private readonly IGenreService _genreService; // Inject Genre Service
 
-        public SessionController(IRepository<Session> sessionRepository, CinemaDbContext context)
+        public SessionController(ISessionService sessionService, IGenreService genreService)
         {
-            _sessionRepository = sessionRepository;
-            _context = context;
+            _sessionService = sessionService;
+            _genreService = genreService;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(DateTime? startDate, DateTime? endDate, int? genreId)
         {
-            var sessions = await _context.Sessions
-                .Include(s => s.Movie)
-                .Include(s => s.Hall)
-                .OrderBy(s => s.StartTime)
-                .ToListAsync();
+            // Get a list of genres for the filter dropdown
+            var genres = await _genreService.GetAllGenresAsync();
+            ViewBag.Genres = genres;  // Pass genres to the view
+
+            // Get the sessions with optional filtering
+            IEnumerable<SessionDTO> sessions = await _sessionService.GetFilteredSessionsAsync(startDate, endDate, genreId);
+
             return View(sessions);
         }
 
         public async Task<IActionResult> Details(int id)
         {
-            var session = await _context.Sessions
-                .Include(s => s.Movie)
-                .Include(s => s.Hall)
-                .FirstOrDefaultAsync(s => s.SessionId == id);
-
+            var session = await _sessionService.GetSessionByIdWithDetailsAsync(id);  // Use SessionService
             if (session == null)
             {
                 return NotFound();
