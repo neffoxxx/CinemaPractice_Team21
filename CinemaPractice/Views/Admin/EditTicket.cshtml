@@ -43,12 +43,18 @@
                 <div class="mb-3">
                     <label asp-for="RowNumber" class="form-label">Row Number</label>
                     <input asp-for="RowNumber" class="form-control" required />
+                    <small class="form-text text-muted">
+                        Enter a valid row number according to the hall configuration.
+                    </small>
                     <span asp-validation-for="RowNumber" class="text-danger"></span>
                 </div>
 
                 <div class="mb-3">
                     <label asp-for="SeatNumber" class="form-label">Seat Number</label>
                     <input asp-for="SeatNumber" class="form-control" required />
+                    <small class="form-text text-muted">
+                        Enter a valid seat number according to the hall configuration.
+                    </small>
                     <span asp-validation-for="SeatNumber" class="text-danger"></span>
                 </div>
 

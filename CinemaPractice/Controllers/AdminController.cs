@@ -326,44 +326,19 @@ namespace CinemaPractice.Controllers
                 {
                     ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
                 }
-
                 return View(model);
             }
 
             try
             {
-                // Перевіряємо, чи змінилося місце
-                var oldTicket = await _ticketService.GetTicketByIdAsync(model.TicketId);
-                if (oldTicket == null)
-                {
-                    ModelState.AddModelError("", "Ticket not found");
-                    return View(model);
-                }
-
-                if (oldTicket.RowNumber != model.RowNumber || oldTicket.SeatNumber != model.SeatNumber)
-                {
-                    // Перевіряємо, чи нове місце доступне
-                    var isSeatAvailable = await _ticketService.IsSeatAvailable(
-                        model.SessionId,
-                        model.RowNumber,
-                        int.Parse(model.SeatNumber));
-
-                    if (!isSeatAvailable)
-                    {
-                        ModelState.AddModelError("", "This seat is already booked. Please select another seat.");
-                        return View(model);
-                    }
-                }
-
                 await _ticketService.UpdateTicketAsync(model);
-
-                TempData["Success"] = "Ticket updated successfully.";
+                TempData["Success"] = "The ticket has been successfully updated.";
                 return RedirectToAction("ManageTickets");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating ticket {TicketId}", model.TicketId);
-                ModelState.AddModelError("", "An error occurred while updating the ticket.");
+                _logger.LogError(ex, "Помилка при оновленні білета {TicketId}", model.TicketId);
+                ModelState.AddModelError("", ex.Message);
                 return View(model);
             }
         }
