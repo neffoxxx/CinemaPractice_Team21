@@ -7,7 +7,11 @@ namespace Infrastructure.Entities
     {
         public Movie()
         {
-            // Ініціалізуємо колекції в конструкторі
+            Title = string.Empty;
+            Description = string.Empty;
+            Director = string.Empty;
+            PosterUrl = string.Empty;
+            TrailerUrl = string.Empty;
             MovieActors = new List<MovieActor>();
             MovieGenres = new List<MovieGenre>();
             Sessions = new List<Session>();
@@ -16,24 +20,22 @@ namespace Infrastructure.Entities
         public int MovieId { get; set; }
 
         [Required(ErrorMessage = "Title is required")]
-        public string Title { get; set; }
+        public required string Title { get; set; }
 
         [Required(ErrorMessage = "Description is required")]
-        public string Description { get; set; }
+        public required string Description { get; set; }
 
         [Required(ErrorMessage = "Release date is required")]
         public DateTime ReleaseDate { get; set; }
 
         [Required(ErrorMessage = "Director is required")]
-        public string Director { get; set; }
+        public required string Director { get; set; }
 
         [Range(0, 10, ErrorMessage = "Rating must be between 0 and 10")]
         public double Rating { get; set; }
 
-        public string PosterUrl { get; set; }
-
-        public string TrailerUrl { get; set; }
-
+        public required string PosterUrl { get; set; }
+        public required string TrailerUrl { get; set; }
         public int DurationMinutes { get; set; }
 
         // Позначаємо колекції як віртуальні та необов'язкові

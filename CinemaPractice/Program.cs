@@ -1,5 +1,4 @@
 using AppCore.Mapping;
-using AppCore.Services;
 using AppCore.Validators;
 using AppCore.DTOs;
 using FluentValidation;
@@ -15,6 +14,8 @@ using Infrastructure.Repositories;
 using Microsoft.Extensions.Configuration;
 using System;
 using Infrastructure.Interfaces;
+using AppCore.Interfaces;
+using AppCore.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,12 +37,12 @@ builder.Services.AddScoped<ITicketRepository, TicketRepository>();
 builder.Services.AddScoped<IHallRepository, HallRepository>();
 
 // Configure Services
-builder.Services.AddScoped<IMovieService, MovieService>();
-builder.Services.AddScoped<IHallService, HallService>();
-builder.Services.AddScoped<ITicketService, TicketService>();
-builder.Services.AddScoped<ISessionService, SessionService>();
-builder.Services.AddScoped<IActorService, ActorService>();
 builder.Services.AddScoped<IGenreService, GenreService>();
+builder.Services.AddScoped<IHallService, HallService>();
+builder.Services.AddScoped<IMovieService, MovieService>();
+builder.Services.AddScoped<ISessionService, SessionService>();
+builder.Services.AddScoped<ITicketService, TicketService>();
+builder.Services.AddScoped<IActorService, ActorService>();
 
 // Configure Validators
 builder.Services.AddScoped<IValidator<MovieDTO>, MovieValidator>();

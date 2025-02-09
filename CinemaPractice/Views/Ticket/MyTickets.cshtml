@@ -1,10 +1,16 @@
 @using Infrastructure.Entities
+@using System.Linq
 @model IEnumerable<Ticket>
 
 <div class="container">
     <h2>My Tickets</h2>
     
-    @if (!Model.Any())
+    @{
+        // Фільтруємо квитки: залишаємо лише ті, чиї сеанси мають активний зал
+        var activeTickets = Model.Where(ticket => ticket.Session?.Hall != null && ticket.Session.Hall.IsActive);
+    }
+
+    @if (!activeTickets.Any())
     {
         <div class="alert alert-info">
             You don't have any tickets yet.
@@ -26,7 +32,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var ticket in Model)
+                    @foreach (var ticket in activeTickets)
                     {
                         <tr>
                             <td>@(ticket.Session?.Movie?.Title ?? "N/A")</td>

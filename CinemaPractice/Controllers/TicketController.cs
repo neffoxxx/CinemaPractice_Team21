@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 using CinemaPractice.Models;
 using Infrastructure.Entities;
 using Infrastructure.Repositories;
-using AppCore.Services;
+using AppCore.Interfaces;
+using AppCore.DTOs;
 
 namespace CinemaPractice.Controllers
 {
@@ -63,6 +64,13 @@ namespace CinemaPractice.Controllers
                     return NotFound("Hall data not found");
                 }
 
+                // Перевірка, чи зал активний для бронювання
+                if (!session.Hall.CanBookSeats)
+                {
+                    _logger.LogWarning("Cannot book ticket: inactive hall detected, Hall ID: {HallId}", session.Hall.HallId);
+                    return BadRequest("Booking is not allowed for an inactive hall.");
+                }
+
                 // Отримуємо тільки ряди з вільними місцями
                 var availableRows = await _ticketService.GetRowsWithAvailableSeats(
                     sessionId, 
@@ -91,13 +99,14 @@ namespace CinemaPractice.Controllers
                     SessionId = sessionId,
                     Price = session.Price,
                     ShowTime = session.StartTime,
-                    MovieTitle = session.Movie?.Title,
+                    MovieTitle = session.Movie?.Title ?? "Unknown Movie",
                     HallId = session.HallId,
-                    HallName = session.Hall?.Name,
-                    RowsCount = session.Hall.RowsCount,
-                    SeatsPerRow = session.Hall.SeatsPerRow,
+                    HallName = session.Hall?.Name ?? "Unknown Hall",
+                    RowsCount = session.Hall?.RowsCount ?? 0,
+                    SeatsPerRow = session.Hall?.SeatsPerRow ?? 0,
                     BookedSeats = bookedSeats,
-                    AvailableRows = availableRows  // Перевіряємо, чи не null тут
+                    AvailableRows = availableRows,
+                    SeatNumber = string.Empty
                 };
 
                 _logger.LogInformation("Created TicketBookingViewModel for session {SessionId}:" +
@@ -125,6 +134,20 @@ namespace CinemaPractice.Controllers
             {
                 if (!ModelState.IsValid)
                 {
+                    return View(model);
+                }
+
+                // Отримуємо дані сеансу для перевірки активності залу
+                var session = await _sessionRepository.GetByIdWithDetailsAsync(model.SessionId);
+                if (session == null)
+                {
+                    _logger.LogWarning("Session not found: {SessionId}", model.SessionId);
+                    return NotFound("Session not found.");
+                }
+                if (session.Hall == null || !session.Hall.CanBookSeats)
+                {
+                    _logger.LogWarning("Cannot book ticket: inactive hall detected, Hall ID: {HallId}", session.Hall?.HallId);
+                    ModelState.AddModelError("", "Booking is not allowed for an inactive hall.");
                     return View(model);
                 }
 
@@ -210,6 +233,27 @@ namespace CinemaPractice.Controllers
                 _logger.LogError(ex, "Error loading tickets for user");
                 return View(Enumerable.Empty<Ticket>());
             }
+        }
+
+        private async Task<IActionResult> SomeAction(Ticket ticket)
+        {
+            if (ticket?.Session?.Movie?.Title == null)
+            {
+                return NotFound();
+            }
+
+            var viewModel = new EditTicketViewModel
+            {
+                MovieTitle = ticket.Session.Movie.Title,
+                SeatNumber = ticket.SeatNumber,
+                Status = ticket.Status,
+                UserName = ticket.User?.Username ?? "Unknown User",
+                HallName = ticket.Session.Hall?.Name ?? "Unknown Hall"
+            };
+
+            await Task.CompletedTask;
+
+            return View(viewModel);
         }
     }
 }

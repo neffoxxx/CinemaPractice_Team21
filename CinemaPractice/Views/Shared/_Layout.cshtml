@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/CinemaPractice.styles.css" asp-append-version="true" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
@@ -18,12 +18,12 @@
                 <div class="navbar-nav">
                     <a class="nav-link text-white" asp-controller="Film" asp-action="Index">Films</a>
                     <a class="nav-link text-white" asp-controller="Session" asp-action="Index">Sessions</a>
-                    @if (User.Identity.IsAuthenticated)
+                    @if (User?.Identity?.IsAuthenticated == true)
                     {
                         <a class="nav-link text-white" asp-controller="Ticket" asp-action="MyTickets">My Tickets</a>
                     }
                     <ul class="navbar-nav ml-auto">
-                        @if (User.Identity.IsAuthenticated)
+                        @if (User?.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item">
                                 <span class="nav-link text-white">Hello, @User.Identity.Name!</span>

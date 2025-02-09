@@ -7,6 +7,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using CinemaPractice.Models;
+using AppCore.Interfaces;
 
 namespace CinemaPractice.Controllers
 {

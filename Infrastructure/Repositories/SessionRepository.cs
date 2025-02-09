@@ -12,7 +12,7 @@ namespace Infrastructure.Repositories
 {
     public class SessionRepository : Repository<Session>, ISessionRepository
     {
-        private readonly CinemaDbContext _context;
+        protected new readonly CinemaDbContext _context;
         private readonly ILogger<SessionRepository> _logger;
 
         public SessionRepository(CinemaDbContext context, ILogger<SessionRepository> logger) : base(context)
@@ -21,7 +21,7 @@ namespace Infrastructure.Repositories
             _logger = logger;
         }
 
-        public override async Task<Session> GetByIdAsync(int id)
+        public override async Task<Session?> GetByIdAsync(int id)
         {
             return await _context.Sessions
                 .Include(s => s.Movie)
@@ -29,7 +29,7 @@ namespace Infrastructure.Repositories
                 .FirstOrDefaultAsync(s => s.SessionId == id);
         }
 
-        public async Task<Session> GetByIdWithDetailsAsync(int id)
+        public async Task<Session?> GetByIdWithDetailsAsync(int id)
         {
             return await _context.Sessions
                 .Include(s => s.Movie)
@@ -39,7 +39,7 @@ namespace Infrastructure.Repositories
         }
 
         public async Task<IEnumerable<Session>> GetAllWithIncludeAsync(
-            Func<IQueryable<Session>, IIncludableQueryable<Session, object>> include = null)
+            Func<IQueryable<Session>, IIncludableQueryable<Session, object>>? include = null)
         {
             IQueryable<Session> query = _context.Sessions;
 
@@ -61,20 +61,11 @@ namespace Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<bool> IsHallAvailableAsync(int hallId, DateTime startTime, DateTime endTime, int? excludeSessionId = null)
+        public async Task<bool> IsHallAvailableAsync(int hallId, DateTime startTime, DateTime endTime, int currentSessionId = 0)
         {
-            var query = _context.Sessions
-                .Where(s => s.HallId == hallId &&
-                           ((s.StartTime >= startTime && s.StartTime < endTime) ||
-                            (s.EndTime > startTime && s.EndTime <= endTime) ||
-                            (s.StartTime <= startTime && s.EndTime >= endTime)));
-
-            if (excludeSessionId.HasValue)
-            {
-                query = query.Where(s => s.SessionId != excludeSessionId.Value);
-            }
-
-            return !await query.AnyAsync();
+            return !await _context.Sessions
+                .Where(s => s.HallId == hallId && (currentSessionId == 0 || s.SessionId != currentSessionId))
+                .AnyAsync(s => s.StartTime < endTime && s.EndTime > startTime);
         }
     }
 } 

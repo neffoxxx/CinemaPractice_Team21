@@ -10,7 +10,7 @@ namespace Infrastructure.Repositories
 {
     public class TicketRepository : Repository<Ticket>, ITicketRepository
     {
-        private readonly CinemaDbContext _context;
+        protected new readonly CinemaDbContext _context;
 
         public TicketRepository(CinemaDbContext context) : base(context)
         {
@@ -20,9 +20,9 @@ namespace Infrastructure.Repositories
         public async Task<IEnumerable<Ticket>> GetUserTicketsAsync(int userId)
         {
             return await _context.Tickets
-                .Include(t => t.Session)
+                .Include(t => t.Session!)
                     .ThenInclude(s => s.Movie)
-                .Include(t => t.Session)
+                .Include(t => t.Session!)
                     .ThenInclude(s => s.Hall)
                 .Where(t => t.UserId == userId)
                 .OrderByDescending(t => t.BookingTime)
@@ -32,19 +32,21 @@ namespace Infrastructure.Repositories
         public async Task<IEnumerable<Ticket>> GetAllWithDetailsAsync()
         {
             return await _context.Tickets
-                .Include(t => t.Session)
+                .Include(t => t.Session!)
                     .ThenInclude(s => s.Movie)
+                .Include(t => t.Session!)
+                    .ThenInclude(s => s.Hall)
                 .Include(t => t.User)
                 .OrderByDescending(t => t.BookingTime)
                 .ToListAsync();
         }
 
-        public async Task<Ticket> GetTicketBySeatAndSessionAsync(int sessionId, string seatNumber)
+        public async Task<Ticket?> GetTicketBySeatAndSessionAsync(int sessionId, string seatNumber)
         {
             return await _context.Tickets
                 .FirstOrDefaultAsync(t => 
                     t.SessionId == sessionId && 
-                    t.SeatNumber == seatNumber.ToString() &&
+                    t.SeatNumber == seatNumber &&
                     t.Status == "Booked");
         }
 
@@ -56,18 +58,18 @@ namespace Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<Ticket> GetByIdWithDetailsAsync(int id)
+        public async Task<Ticket?> GetByIdWithDetailsAsync(int id)
         {
             return await _context.Tickets
-                .Include(t => t.Session)
+                .Include(t => t.Session!)
                     .ThenInclude(s => s.Movie)
-                .Include(t => t.Session)
+                .Include(t => t.Session!)
                     .ThenInclude(s => s.Hall)
                 .Include(t => t.User)
                 .FirstOrDefaultAsync(t => t.TicketId == id);
         }
 
-        public async Task UpdateAsync(Ticket entity)
+        public override async Task UpdateAsync(Ticket entity)
         {
             try
             {
@@ -95,10 +97,15 @@ namespace Infrastructure.Repositories
 
         public async Task<bool> AnyAsync(Func<object, bool> predicate)
         {
+            if (predicate.Target is not Ticket ticket)
+            {
+                throw new ArgumentException("Invalid predicate target type", nameof(predicate));
+            }
+
             return await _context.Tickets
-                .AnyAsync(t => t.SessionId == ((Ticket)predicate.Target).SessionId 
-                    && t.RowNumber == ((Ticket)predicate.Target).RowNumber 
-                    && t.SeatNumber == ((Ticket)predicate.Target).SeatNumber 
+                .AnyAsync(t => t.SessionId == ticket.SessionId 
+                    && t.RowNumber == ticket.RowNumber 
+                    && t.SeatNumber == ticket.SeatNumber 
                     && t.Status == "Booked");
         }
     }

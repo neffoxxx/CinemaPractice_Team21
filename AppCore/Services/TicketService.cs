@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Linq.Expressions;
 using AppCore.DTOs;
+using AppCore.Interfaces;
 
 namespace AppCore.Services
 {
@@ -18,26 +19,29 @@ namespace AppCore.Services
         private readonly ISessionRepository _sessionRepository;
         private readonly ILogger<TicketService> _logger;
         private readonly IMapper _mapper;
+        private readonly IHallService _hallService;
 
         public TicketService(ITicketRepository ticketRepository,
         ILogger<TicketService> logger,
         ISessionRepository sessionRepository,
-        IMapper mapper)
+        IMapper mapper,
+        IHallService hallService)
         {
             _ticketRepository = ticketRepository;
             _logger = logger;
             _sessionRepository = sessionRepository;
             _mapper = mapper;
+            _hallService = hallService;
         }
 
         public async Task<IEnumerable<TicketDTO>> GetAllTicketsAsync()
         {
             _logger.LogInformation("Getting all tickets with related data");
             var tickets = await _ticketRepository.GetAllWithDetailsAsync();
-            return _mapper.Map<IEnumerable<TicketDTO>>(tickets);
+            return _mapper.Map<IEnumerable<TicketDTO>>(tickets) ?? Enumerable.Empty<TicketDTO>();
         }
 
-        public async Task<TicketDTO> GetTicketByIdAsync(int id)
+        public async Task<TicketDTO?> GetTicketByIdAsync(int id)
         {
             _logger.LogInformation("Getting ticket by ID: {Id}", id);
             var ticket = await _ticketRepository.GetByIdWithDetailsAsync(id);
@@ -60,10 +64,37 @@ namespace AppCore.Services
                 _logger.LogError("Ticket not found, ID: {TicketId}", ticketDto.TicketId);
                 throw new Exception($"Ticket not found, ID: {ticketDto.TicketId}");
             }
+
+            var hall = await _hallService.GetHallByIdAsync(ticketDto.HallId);
+            if (hall == null)
+            {
+                _logger.LogError("Hall with ID {HallId} not found for ticket {TicketId}", ticketDto.HallId, ticketDto.TicketId);
+                throw new Exception($"Hall with ID {ticketDto.HallId} not found.");
+            }
+
+            if (!int.TryParse(ticketDto.SeatNumber, out int seatNumber))
+            {
+                _logger.LogError("Invalid SeatNumber format for TicketId: {TicketId}", ticketDto.TicketId);
+                throw new Exception("Invalid seat number format.");
+            }
+
+            if (ticketDto.RowNumber < 1 || ticketDto.RowNumber > hall.RowsCount ||
+                seatNumber < 1 || seatNumber > hall.SeatsPerRow)
+            {
+                _logger.LogError("Invalid seat position for ticket {TicketId}: Row {RowNumber} (Allowed 1-{MaxRows}), Seat {SeatNumber} (Allowed 1-{MaxSeats}) in hall {HallId}",
+                    ticketDto.TicketId, ticketDto.RowNumber, hall.RowsCount, seatNumber, hall.SeatsPerRow, ticketDto.HallId);
+                throw new Exception("The specified row or seat is out of the hall boundaries.");
+            }
+
+            var isSeatAvailable = await IsSeatAvailable(ticketDto.SessionId, ticketDto.RowNumber, seatNumber);
+            if (!isSeatAvailable)
+            {
+                _logger.LogError("Seat is not available for update, TicketId: {TicketId}", ticketDto.TicketId);
+                throw new Exception("This seat is already booked. Please choose another seat.");
+            }
+
             _mapper.Map(ticketDto, ticket);
-
             await _ticketRepository.UpdateAsync(ticket);
-
         }
 
         public async Task DeleteTicketAsync(int id)
@@ -91,6 +122,7 @@ namespace AppCore.Services
 
         public async Task<(int Row, int Seat)> CalculateSeatPosition(int globalSeatNumber, int seatsPerRow)
         {
+            await Task.CompletedTask; // Якщо немає реальних асинхронних операцій
             _logger.LogInformation("Calculating seat position for global seat number: {GlobalSeatNumber}, with seats per row: {SeatsPerRow}", globalSeatNumber, seatsPerRow);
             if (seatsPerRow <= 0)
             {

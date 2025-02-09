@@ -2,6 +2,9 @@
 
 @{
     ViewData["Title"] = "Sessions";
+    var genres = (List<AppCore.DTOs.GenreDTO>)(ViewBag.Genres ?? new List<AppCore.DTOs.GenreDTO>());
+    var halls = (List<AppCore.DTOs.HallDTO>)(ViewBag.Halls ?? new List<AppCore.DTOs.HallDTO>());
+    var movies = (List<AppCore.DTOs.MovieDTO>)(ViewBag.Movies ?? new List<AppCore.DTOs.MovieDTO>());
 }
 
 <h2>Sessions</h2>
@@ -28,15 +31,56 @@
                 <label for="genreId" class="form-label small">Genre:</label>
                 <select class="form-select form-select-sm" id="genreId" name="genreId">
                     <option value="">All Genres</option>
-                    @foreach (var genre in (List<AppCore.DTOs.GenreDTO>)ViewBag.Genres)
+                    @foreach (var genre in genres)
                     {
                         var isSelected = Context.Request.Query["genreId"] == genre.GenreId.ToString();
                         <option value="@genre.GenreId" selected="@(isSelected ? "selected" : null)">@genre.Name</option>
                     }
                 </select>
             </div>
+
+            <div class="col-md-3">
+                <label for="minPrice" class="form-label small">Min Price:</label>
+                <input type="number" step="0.01" class="form-control form-control-sm" id="minPrice" name="minPrice" value="@(Context.Request.Query["minPrice"])" placeholder="0.00" />
+            </div>
+        </div>
+
+        <div class="row g-2 align-items-end mt-2">
+            <div class="col-md-3">
+                <label for="maxPrice" class="form-label small">Max Price:</label>
+                <input type="number" step="0.01" class="form-control form-control-sm" id="maxPrice" name="maxPrice" value="@(Context.Request.Query["maxPrice"])" placeholder="0.00" />
+            </div>
+
+            <div class="col-md-3">
+                <label for="hallId" class="form-label small">Hall:</label>
+                <select class="form-select form-select-sm" id="hallId" name="hallId">
+                    <option value="">All Halls</option>
+                    @foreach (var hall in halls.Where(h => h.IsActive))
+                    {
+                        var isSelected = Context.Request.Query["hallId"] == hall.HallId.ToString();
+                        <option value="@hall.HallId" selected="@(isSelected ? "selected" : null)">@hall.Name</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label for="movieTitle" class="form-label small">Movie:</label>
+                <select class="form-select form-select-sm" id="movieTitle" name="movieTitle">
+                    <option value="">All Movies</option>
+                    @foreach (var movie in movies)
+                    {
+                        var isSelected = Context.Request.Query["movieTitle"] == movie.Title;
+                        <option value="@movie.Title" selected="@(isSelected ? "selected" : null)">@movie.Title</option>
+                    }
+                </select>
+            </div>
+
             <div class="col-md-3 d-grid">
                 <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+            </div>
+
+            <div class="col-md-3 d-grid">
+                <a href="@Url.Action("Index", "Session")" class="btn btn-secondary btn-sm">Reset Filters</a>
             </div>
         </div>
     </form>

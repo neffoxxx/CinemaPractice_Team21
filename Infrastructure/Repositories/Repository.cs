@@ -23,14 +23,54 @@ namespace Infrastructure.Repositories
             _dbSet = context.Set<T>();
         }
 
-        public virtual async Task<T> GetByIdAsync(int id)
-        {
-            return await _dbSet.FindAsync(id);
-        }
-
         public virtual async Task<IEnumerable<T>> GetAllAsync()
         {
             return await _dbSet.ToListAsync();
+        }
+
+        public virtual async Task<T?> GetByIdAsync(int id)
+        {
+            var entityType = typeof(T);
+            var idProperty = entityType.GetProperties()
+                .FirstOrDefault(p => p.Name.EndsWith("Id"));
+
+            if (idProperty == null)
+            {
+                throw new InvalidOperationException($"No ID property found for entity {entityType.Name}");
+            }
+
+            var parameter = Expression.Parameter(entityType, "e");
+            var property = Expression.Property(parameter, idProperty);
+            var constant = Expression.Constant(id);
+            var equals = Expression.Equal(property, constant);
+            var lambda = Expression.Lambda<Func<T, bool>>(equals, parameter);
+
+            return await _dbSet.FirstOrDefaultAsync(lambda);
+        }
+
+        public virtual async Task<T?> GetByIdWithIncludeAsync(int id, Func<IQueryable<T>, IIncludableQueryable<T, object>>? includeFunc)
+        {
+            var entityType = typeof(T);
+            var idProperty = entityType.GetProperties()
+                .FirstOrDefault(p => p.Name.EndsWith("Id"));
+
+            if (idProperty == null)
+            {
+                throw new InvalidOperationException($"No ID property found for entity {entityType.Name}");
+            }
+
+            var parameter = Expression.Parameter(entityType, "e");
+            var property = Expression.Property(parameter, idProperty);
+            var constant = Expression.Constant(id);
+            var equals = Expression.Equal(property, constant);
+            var lambda = Expression.Lambda<Func<T, bool>>(equals, parameter);
+
+            var query = _dbSet.AsQueryable();
+            if (includeFunc != null)
+            {
+                query = includeFunc(query);
+            }
+            return await query.FirstOrDefaultAsync(lambda);
         }
 
         public virtual async Task AddAsync(T entity)
@@ -41,7 +81,7 @@ namespace Infrastructure.Repositories
 
         public virtual async Task UpdateAsync(T entity)
         {
-            _dbSet.Update(entity);
+            _context.Entry(entity).State = EntityState.Modified;
             await _context.SaveChangesAsync();
         }
 
@@ -55,34 +95,39 @@ namespace Infrastructure.Repositories
             }
         }
 
-        public async Task<T> GetByIdWithIncludeAsync(int id, Func<IQueryable<T>, IIncludableQueryable<T, object>> include = null)
+        public virtual async Task<bool> ExistsAsync(int id)
         {
-            IQueryable<T> query = _dbSet;
+            var entityType = typeof(T);
+            var idProperty = entityType.GetProperties()
+                .FirstOrDefault(p => p.Name.EndsWith("Id"));
 
-            if (include != null)
+            if (idProperty == null)
             {
-                query = include(query);
+                throw new InvalidOperationException($"No ID property found for entity {entityType.Name}");
             }
 
-            // Припускаємо, що у всіх сутностей є властивість Id
-            return await query.FirstOrDefaultAsync(e => EF.Property<int>(e, "MovieId") == id);
+            var parameter = Expression.Parameter(entityType, "e");
+            var property = Expression.Property(parameter, idProperty);
+            var constant = Expression.Constant(id);
+            var equals = Expression.Equal(property, constant);
+            var lambda = Expression.Lambda<Func<T, bool>>(equals, parameter);
+
+            return await _dbSet.AnyAsync(lambda);
         }
 
-        public async Task<IEnumerable<T>> GetAllWithIncludeAsync(Func<IQueryable<T>, IQueryable<T>> include)
+        public virtual async Task<IEnumerable<T>> GetAllWithIncludeAsync(Func<IQueryable<T>, IQueryable<T>> include)
         {
-            IQueryable<T> query = _dbSet;
-
+            var query = _dbSet.AsQueryable();
             if (include != null)
             {
                 query = include(query);
             }
-
             return await query.ToListAsync();
         }
 
-        public async Task<bool> AnyAsync(Expression<Func<T, bool>> predicate)
+        public virtual async Task<bool> AnyAsync(Expression<Func<T, bool>> predicate)
         {
-            return await _context.Set<T>().AnyAsync(predicate);
+            return await _dbSet.AnyAsync(predicate);
         }
     }
 }

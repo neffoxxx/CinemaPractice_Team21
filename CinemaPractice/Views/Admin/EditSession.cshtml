@@ -19,11 +19,10 @@
         <div class="col-md-6">
             <form asp-action="EditSession" method="post">
                 <input type="hidden" asp-for="SessionId" />
-                <input type="hidden" asp-for="EndTime" />
 
                 <div class="mb-3">
                     <label asp-for="MovieId" class="form-label">Movie</label>
-                    <select asp-for="MovieId" asp-items="Model.Movies" class="form-select">
+                    <select asp-for="MovieId" class="form-select" asp-items="@Model.Movies">
                         <option value="">Select a movie...</option>
                     </select>
                     <span asp-validation-for="MovieId" class="text-danger"></span>
@@ -31,7 +30,7 @@
 
                 <div class="mb-3">
                     <label asp-for="HallId" class="form-label">Hall</label>
-                    <select asp-for="HallId" asp-items="Model.Halls" class="form-select">
+                    <select asp-for="HallId" class="form-select" asp-items="@Model.Halls">
                         <option value="">Select a hall...</option>
                     </select>
                     <span asp-validation-for="HallId" class="text-danger"></span>
@@ -45,6 +44,7 @@
 
                 <div class="mb-3">
                     <label class="form-label">End Time (calculated based on movie duration)</label>
+                    <input type="hidden" asp-for="EndTime" />
                     <input class="form-control" type="datetime-local" value="@Model.EndTime.ToString("yyyy-MM-ddTHH:mm")" disabled />
                 </div>
 
