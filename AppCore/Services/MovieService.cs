@@ -10,6 +10,7 @@ using System.Linq;
 using Infrastructure.Interfaces;
 using System;
 using Infrastructure.Data;
+using AppCore.Interfaces;
 
 namespace AppCore.Services
 {
@@ -162,14 +163,11 @@ namespace AppCore.Services
             _logger.LogInformation("Deleting movie by id: {Id}", id);
             await _movieRepository.DeleteAsync(id);
         }
-    }
 
-    public interface IMovieService
-    {
-        Task<IEnumerable<MovieDTO>> GetAllMoviesAsync();
-        Task<MovieDTO?> GetMovieByIdAsync(int id);
-        Task AddMovieAsync(MovieDTO movieDto);
-        Task UpdateMovieAsync(MovieDTO movieDto);
-        Task DeleteMovieAsync(int id);
+        public List<MovieDTO> GetAllMovies()
+        {
+            var movies = _movieRepository.GetAllAsync().Result;
+            return _mapper.Map<List<MovieDTO>>(movies);
+        }
     }
 }

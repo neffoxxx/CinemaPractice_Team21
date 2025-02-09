@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Linq.Expressions;
 using AppCore.DTOs;
+using AppCore.Interfaces;
 
 namespace AppCore.Services
 {

@@ -38,6 +38,8 @@ namespace AppCore.Mapping
                     src.Session != null ? src.Session.HallId : 0))
                 .ForMember(dest => dest.HallName, opt => opt.MapFrom((src, _, _, context) => 
                     src.Session != null && src.Session.Hall != null ? src.Session.Hall.Name : string.Empty))
+                .ForMember(dest => dest.IsHallActive, opt => opt.MapFrom(src => 
+                    src.Session != null && src.Session.Hall != null && src.Session.Hall.IsActive))
                 .ReverseMap();
             CreateMap<Hall, HallDTO>().ReverseMap();
             CreateMap<Actor, ActorDTO>().ReverseMap();

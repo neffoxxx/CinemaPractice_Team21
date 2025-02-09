@@ -1,5 +1,6 @@
 @using Infrastructure.Entities
 @model IEnumerable<AppCore.DTOs.TicketDTO>
+
 <div class="container">
     <h2>Manage Tickets</h2>
 
@@ -26,7 +27,8 @@
                     <th>Session</th>
                     <th>Row</th>
                     <th>Seat</th>
-                    <th>Status</th>
+                    <th>Ticket Status</th>
+                    <th>Hall Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -36,14 +38,25 @@
                     <tr>
                         <td>@ticket.UserName</td>
                         <td>@ticket.MovieTitle</td>
-                       <td>@ticket.ShowTime.ToString("g")</td>
+                        <td>@ticket.ShowTime.ToString("g")</td>
                         <td>@ticket.RowNumber</td>
                         <td>@ticket.SeatNumber</td>
                         <td>@ticket.Status</td>
+                        <td>@(ticket.IsHallActive ? "Active" : "Inactive")</td>
                         <td>
                             <div class="btn-group">
-                                <a asp-action="EditTicket" asp-route-id="@ticket.TicketId" 
-                                   class="btn btn-primary btn-sm">Edit</a>
+                                @if (ticket.IsHallActive)
+                                {
+                                    <a asp-action="EditTicket" asp-route-id="@ticket.TicketId" 
+                                       class="btn btn-primary btn-sm">Edit</a>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-secondary btn-sm" disabled 
+                                            title="Editing ticket for inactive hall is not allowed">
+                                        Edit
+                                    </button>
+                                }
                                 <form asp-action="DeleteTicket" asp-route-id="@ticket.TicketId" 
                                       method="post" style="display: inline;">
                                     <button type="submit" class="btn btn-danger btn-sm" 

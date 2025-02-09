@@ -127,10 +127,12 @@
                     .OrderBy(s => s.StartTime)
                     .ToList();
 
-                var availableSessions = futureSessions.Where(s => 
-                    s.Tickets == null || 
-                    s.Hall == null || 
-                    s.Tickets.Count < s.Hall.Capacity).ToList();
+                // Фільтруємо сеанси таким чином, щоб відображались лише ті, що мають активний зал
+                var availableSessions = futureSessions
+                    .Where(s => s.Hall != null &&
+                                s.Hall.IsActive &&
+                                (s.Tickets == null || s.Tickets.Count < s.Hall.Capacity))
+                    .ToList();
 
                 @if (futureSessions.Any())
                 {
@@ -189,6 +191,7 @@
                     <i class="fas fa-info-circle"></i> No sessions available for this movie at the moment.
                 </div>
             }
+        </div>
     </div>
     <div class="mt-3">
         <a asp-action="Index" class="btn btn-secondary">

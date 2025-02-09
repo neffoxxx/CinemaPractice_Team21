@@ -1,14 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using AppCore.DTOs;
-using AppCore.Services;
 using Microsoft.Extensions.Logging;
 using FluentValidation;
 using System.Threading.Tasks;
 using System;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using AppCore.Services.Interfaces;
+using AppCore.Interfaces;
+using System.Collections.Generic;
 
 namespace CinemaPractice.Controllers
 {
@@ -32,8 +32,8 @@ namespace CinemaPractice.Controllers
             ISessionService sessionService,
             ILogger<AdminController> logger,
             ITicketService ticketService,
-             IHallService hallService,
-               IValidator<MovieDTO> movieValidator,
+            IHallService hallService,
+            IValidator<MovieDTO> movieValidator,
             IValidator<SessionDTO> sessionValidator,
             IValidator<TicketDTO> ticketValidator,
             IValidator<HallDTO> hallValidator,
@@ -52,7 +52,6 @@ namespace CinemaPractice.Controllers
             _actorService = actorService;
             _genreService = genreService;
         }
-
 
         public async Task<IActionResult> ManageFilms()
         {
@@ -89,7 +88,6 @@ namespace CinemaPractice.Controllers
                 await _movieService.AddMovieAsync(movieDto);
                 return RedirectToAction(nameof(ManageFilms));
             }
-            
             await LoadGenresAndActors();
             return View(movieDto);
         }
@@ -251,30 +249,16 @@ namespace CinemaPractice.Controllers
         [HttpGet]
         public async Task<IActionResult> EditSession(int id)
         {
-            try
+            // Використовуємо метод, який повертає сесію для редагування (з повними деталями)
+            var session = await _sessionService.GetSessionForEditAsync(id);
+            if (session == null)
             {
-                var session = await _sessionService.GetSessionByIdAsync(id);
-                if (session == null)
-                {
-                    return NotFound();
-                }
-
-                // Get all movies and halls for dropdowns
-                var movies = await _movieService.GetAllMoviesAsync();
-                var halls = await _hallService.GetAllHallsAsync();
-
-                // Populate SelectLists
-                session.Movies = new SelectList(movies, "MovieId", "Title", session.MovieId);
-                session.Halls = new SelectList(halls, "HallId", "Name", session.HallId);
-
-                return View(session);
+               return NotFound();
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error loading session for editing");
-                TempData["Error"] = "Error loading session data.";
-                return RedirectToAction(nameof(ManageSessions));
-            }
+            
+            // Оновлюємо списки вибору (Movies та Halls)
+            await _sessionService.PopulateSessionSelectLists(session);
+            return View(session);
         }
 
         [HttpPost]
@@ -285,15 +269,12 @@ namespace CinemaPractice.Controllers
             {
                 if (!ModelState.IsValid)
                 {
-                    // Repopulate dropdowns if validation fails
-                    var movies = await _movieService.GetAllMoviesAsync();
-                    var halls = await _hallService.GetAllHallsAsync();
-                    sessionDTO.Movies = new SelectList(movies, "MovieId", "Title", sessionDTO.MovieId);
-                    sessionDTO.Halls = new SelectList(halls, "HallId", "Name", sessionDTO.HallId);
+                    // Повторно заповнюємо випадаючі списки з відфільтрованими даними
+                    await _sessionService.PopulateSessionSelectLists(sessionDTO);
                     return View(sessionDTO);
                 }
 
-                // Get movie duration to calculate EndTime
+                // Отримуємо дані фільму для розрахунку EndTime, якщо потрібно
                 var movie = await _movieService.GetMovieByIdAsync(sessionDTO.MovieId);
                 if (movie != null)
                 {
@@ -308,13 +289,9 @@ namespace CinemaPractice.Controllers
             {
                 _logger.LogError(ex, "Error updating session");
                 ModelState.AddModelError("", "Error updating session.");
-                
-                // Repopulate dropdowns
-                var movies = await _movieService.GetAllMoviesAsync();
-                var halls = await _hallService.GetAllHallsAsync();
-                sessionDTO.Movies = new SelectList(movies, "MovieId", "Title", sessionDTO.MovieId);
-                sessionDTO.Halls = new SelectList(halls, "HallId", "Name", sessionDTO.HallId);
-                
+
+                // Повторно заповнюємо випадаючі списки для відображення коректних даних
+                await _sessionService.PopulateSessionSelectLists(sessionDTO);
                 return View(sessionDTO);
             }
         }
@@ -644,7 +621,7 @@ namespace CinemaPractice.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error in LoadGenresAndActors");
-                throw; // Re-throw to be handled by the calling method
+                throw;
             }
         }
     }

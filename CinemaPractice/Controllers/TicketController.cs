@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 using CinemaPractice.Models;
 using Infrastructure.Entities;
 using Infrastructure.Repositories;
-using AppCore.Services;
+using AppCore.Interfaces;
+using AppCore.DTOs;
 
 namespace CinemaPractice.Controllers
 {
@@ -61,6 +62,13 @@ namespace CinemaPractice.Controllers
                 {
                     _logger.LogError("Hall data not found for session: {SessionId}", sessionId);
                     return NotFound("Hall data not found");
+                }
+
+                // Перевірка, чи зал активний для бронювання
+                if (!session.Hall.CanBookSeats)
+                {
+                    _logger.LogWarning("Cannot book ticket: inactive hall detected, Hall ID: {HallId}", session.Hall.HallId);
+                    return BadRequest("Booking is not allowed for an inactive hall.");
                 }
 
                 // Отримуємо тільки ряди з вільними місцями
@@ -126,6 +134,20 @@ namespace CinemaPractice.Controllers
             {
                 if (!ModelState.IsValid)
                 {
+                    return View(model);
+                }
+
+                // Отримуємо дані сеансу для перевірки активності залу
+                var session = await _sessionRepository.GetByIdWithDetailsAsync(model.SessionId);
+                if (session == null)
+                {
+                    _logger.LogWarning("Session not found: {SessionId}", model.SessionId);
+                    return NotFound("Session not found.");
+                }
+                if (session.Hall == null || !session.Hall.CanBookSeats)
+                {
+                    _logger.LogWarning("Cannot book ticket: inactive hall detected, Hall ID: {HallId}", session.Hall?.HallId);
+                    ModelState.AddModelError("", "Booking is not allowed for an inactive hall.");
                     return View(model);
                 }
 

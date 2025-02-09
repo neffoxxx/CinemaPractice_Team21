@@ -61,20 +61,11 @@ namespace Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<bool> IsHallAvailableAsync(int hallId, DateTime startTime, DateTime endTime, int? excludeSessionId = null)
+        public async Task<bool> IsHallAvailableAsync(int hallId, DateTime startTime, DateTime endTime, int currentSessionId = 0)
         {
-            var query = _context.Sessions
-                .Where(s => s.HallId == hallId &&
-                           ((s.StartTime >= startTime && s.StartTime < endTime) ||
-                            (s.EndTime > startTime && s.EndTime <= endTime) ||
-                            (s.StartTime <= startTime && s.EndTime >= endTime)));
-
-            if (excludeSessionId.HasValue)
-            {
-                query = query.Where(s => s.SessionId != excludeSessionId.Value);
-            }
-
-            return !await query.AnyAsync();
+            return !await _context.Sessions
+                .Where(s => s.HallId == hallId && (currentSessionId == 0 || s.SessionId != currentSessionId))
+                .AnyAsync(s => s.StartTime < endTime && s.EndTime > startTime);
         }
     }
 } 

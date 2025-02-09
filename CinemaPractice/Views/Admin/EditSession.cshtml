@@ -44,6 +44,7 @@
 
                 <div class="mb-3">
                     <label class="form-label">End Time (calculated based on movie duration)</label>
+                    <input type="hidden" asp-for="EndTime" />
                     <input class="form-control" type="datetime-local" value="@Model.EndTime.ToString("yyyy-MM-ddTHH:mm")" disabled />
                 </div>
 

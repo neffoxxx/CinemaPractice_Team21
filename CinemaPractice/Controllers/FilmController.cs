@@ -9,11 +9,10 @@ using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using Infrastructure.Interfaces;
-using AppCore.Services;
 using Microsoft.EntityFrameworkCore.Query;
 using Infrastructure.Data;
 using AppCore.ViewModels;
-using AppCore.Services.Interfaces;
+using AppCore.Interfaces;
 
 namespace CinemaPractice.Controllers
 {
@@ -100,7 +99,10 @@ namespace CinemaPractice.Controllers
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            return View(new ErrorViewModel 
+            { 
+                RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier 
+            });
         }
     }
 }
