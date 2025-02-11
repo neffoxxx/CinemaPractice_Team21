@@ -1,9 +1,15 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace AppCore.DTOs
 {
     public class MovieActorDTO
     {
-        public int MovieId { get; set; } // Ідентифікатор фільму
-        public string Title { get; set; } = string.Empty; // Назва фільму
-        public MovieDTO? Movie { get; set; } // Якщо у вас є MovieDTO
+        [Range(1, int.MaxValue, ErrorMessage = "MovieId must be greater than 0")]
+        public int MovieId { get; set; }
+
+        [Required(ErrorMessage = "Movie title is required")]
+        public string Title { get; set; } = string.Empty;
+
+        public MovieDTO? Movie { get; set; }
     }
 } 
