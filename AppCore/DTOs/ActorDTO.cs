@@ -14,6 +14,7 @@ namespace AppCore.DTOs
         [StringLength(2000, ErrorMessage = "Bio cannot exceed 2000 characters")]
         public string Bio { get; set; } = string.Empty;
         
+        [Url(ErrorMessage = "Photo URL must be a valid URL")]
         public string PhotoUrl { get; set; } = string.Empty;
 
         public ICollection<MovieActorDTO>? MovieActors { get; set; }
