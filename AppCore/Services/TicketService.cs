@@ -54,6 +54,7 @@ namespace AppCore.Services
             return _mapper.Map<TicketDTO>(ticket);
         }
 
+        // In TicketService.cs, inside UpdateTicketAsync method
         public async Task UpdateTicketAsync(TicketDTO ticketDto)
         {
             _logger.LogInformation("Updating ticket, ID: {TicketId}", ticketDto.TicketId);
@@ -86,11 +87,15 @@ namespace AppCore.Services
                 throw new Exception("The specified row or seat is out of the hall boundaries.");
             }
 
-            var isSeatAvailable = await IsSeatAvailable(ticketDto.SessionId, ticketDto.RowNumber, seatNumber);
-            if (!isSeatAvailable)
+            // Only check seat availability if the seat is being changed, or if the status is "Booked".
+            if ((ticket.RowNumber != ticketDto.RowNumber || ticket.SeatNumber != ticketDto.SeatNumber) || ticketDto.Status == "Booked")
             {
-                _logger.LogError("Seat is not available for update, TicketId: {TicketId}", ticketDto.TicketId);
-                throw new Exception("This seat is already booked. Please choose another seat.");
+                var isSeatAvailable = await IsSeatAvailable(ticketDto.SessionId, ticketDto.RowNumber, seatNumber);
+                if (!isSeatAvailable)
+                {
+                    _logger.LogError("Seat is not available for update, TicketId: {TicketId}", ticketDto.TicketId);
+                    throw new Exception("This seat is already booked. Please choose another seat.");
+                }
             }
 
             _mapper.Map(ticketDto, ticket);

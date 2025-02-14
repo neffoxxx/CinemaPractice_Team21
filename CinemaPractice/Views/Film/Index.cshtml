@@ -7,14 +7,16 @@
     {
         <div class="col-md-3 mb-4">
             <div class="card h-100">
-                @if (!string.IsNullOrEmpty(movie.PosterUrl))
-                {
-                    <img src="@movie.PosterUrl" class="card-img-top" alt="@movie.Title" style="height: 450px; width: 100%; object-fit: cover;">
-                }
-                else
-                {
-                    <img src="/images/default-movie-poster.jpg" class="card-img-top" alt="Default poster" style="height: 450px; width: 100%; object-fit: cover;">
-                }
+                <a href="@Url.Action("Details", "Film", new { id = movie.MovieId })" style="display:block;">
+                    @if (!string.IsNullOrEmpty(movie.PosterUrl))
+                    {
+                        <img src="@movie.PosterUrl" class="card-img-top" alt="@movie.Title" style="height: 450px; width: 100%; object-fit: cover;">
+                    }
+                    else
+                    {
+                        <img src="/images/default-movie-poster.jpg" class="card-img-top" alt="Default poster" style="height: 450px; width: 100%; object-fit: cover;">
+                    }
+                </a>
                 <div class="card-body">
                     <h5 class="card-title">@movie.Title</h5>
                     <p class="card-text">
@@ -22,7 +24,7 @@
                     </p>
                     <p class="card-text">
                         <small class="text-muted">
-                            Genres: 
+                            Genres:
                             @if (movie.MovieGenres != null && movie.MovieGenres.Any())
                             {
                                 @string.Join(", ", movie.MovieGenres.Select(mg => mg.Genre.Name))
@@ -33,7 +35,7 @@
                             }
                         </small>
                     </p>
-                    <a href="@Url.Action("Details", "Film", new { id = movie.MovieId })" 
+                    <a href="@Url.Action("Details", "Film", new { id = movie.MovieId })"
                        class="btn btn-primary">Details</a>
                 </div>
             </div>
@@ -48,12 +50,14 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             max-width: 300px;
             margin: 0 auto;
+            /*Add relative position here for better click area*/
+            position: relative;
         }
 
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-        }
+            .card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            }
 
         .card-title {
             font-weight: bold;

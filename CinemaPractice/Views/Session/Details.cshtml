@@ -1,14 +1,14 @@
-@model Infrastructure.Entities.Session
+@model AppCore.DTOs.SessionDTO
 
 <h2>Session Details</h2>
 
 <div class="card">
     <div class="card-body">
-        <h4 class="card-title">@(Model.Movie?.Title ?? "N/A")</h4>
+        <h4 class="card-title">@Model.MovieTitle</h4>
         <hr />
         <dl class="row">
             <dt class="col-sm-3">Hall</dt>
-            <dd class="col-sm-9">@(Model.Hall?.Name ?? "N/A")</dd>
+            <dd class="col-sm-9">@Model.HallName</dd>
 
             <dt class="col-sm-3">Start Time</dt>
             <dd class="col-sm-9">@Model.StartTime.ToString("dd/MM/yyyy HH:mm")</dd>
