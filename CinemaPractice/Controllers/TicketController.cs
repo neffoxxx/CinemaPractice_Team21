@@ -226,6 +226,17 @@ namespace CinemaPractice.Controllers
                     return View(Enumerable.Empty<Ticket>());
                 }
 
+                // Update ticket statuses
+                var now = DateTime.UtcNow;
+                foreach (var ticket in tickets)
+                {
+                    if (ticket.Session != null && ticket.Session.Movie != null && ticket.Status == "Booked" && ticket.Session.StartTime.AddMinutes(ticket.Session.Movie.DurationMinutes) < now)
+                    {
+                        ticket.Status = "Used";
+                        await _ticketRepository.UpdateAsync(ticket);
+                    }
+                }
+
                 return View(tickets);
             }
             catch (Exception ex)
