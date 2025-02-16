@@ -9,17 +9,13 @@
 }
 
 @if (!activeTickets.Any())
-{
-    <p>No active tickets available.</p>
-}
-
     {
         <div class="empty-state">
             <i class="fas fa-ticket-alt"></i>
-            <h3>������ ���� ����</h3>
-            <p>� ��� �� ���� ������. ����������� ���� ������� ������ �� ���������� ��� ��������� ��������!</p>
+            <h3>Квитків поки немає</h3>
+            <p>У вас ще немає квитків. Перегляньте наші останні фільми та забронюйте свій наступний кіносеанс!</p>
             <a href="@Url.Action("Index", "Film")" class="btn btn-primary">
-                <i class="fas fa-film me-2"></i>����������� ������
+                <i class="fas fa-film me-2"></i>Переглянути фільми
             </a>
         </div>
     }
