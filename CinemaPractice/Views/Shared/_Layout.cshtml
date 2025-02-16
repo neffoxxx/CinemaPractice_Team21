@@ -4,6 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Cinema</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/CinemaPractice.styles.css" asp-append-version="true" />
@@ -11,53 +13,137 @@
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-dark border-bottom box-shadow mb-3">
-            <div class="container">
-                <a class="navbar-brand text-white" asp-controller="Film" asp-action="Index">Cinema</a>
-                <div class="navbar-nav">
-                    <a class="nav-link text-white" asp-controller="Film" asp-action="Index">Films</a>
-                    <a class="nav-link text-white" asp-controller="Session" asp-action="Index">Sessions</a>
-                    @if (User?.Identity?.IsAuthenticated == true)
-                    {
-                        <a class="nav-link text-white" asp-controller="Ticket" asp-action="MyTickets">My Tickets</a>
-                    }
-                    <ul class="navbar-nav ml-auto">
+    <header class="header-main">
+        <nav class="navbar navbar-expand-sm navbar-dark">
+            <div class="header-container">
+ 
+                <a class="navbar-brand fs-4 fw-bold" asp-controller="Film" asp-action="Index"
+                   style="color: white; text-shadow: 2px 2px 8px rgba(255, 255, 255, 0.5);">
+                    <i class="fas fa-star me-2" style="color: white; text-shadow: 1px 1px 4px rgba(255, 255, 255, 0.6);"></i>
+                    <span style="font-weight: 900; font-size: 1.5rem; letter-spacing: 2px;">КіноStar</span>
+                </a>
+                <button class="navbar-toggler" type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#navbarNav"
+                        aria-controls="navbarNav"
+                        aria-expanded="false"
+                        aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse burger-menu-content" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["Controller"].ToString() == "Film" ? "active" : "")"
+                               asp-controller="Film"
+                               asp-action="Index">
+                                <i class="fas fa-film"></i>
+                                <span>Фільми</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["Controller"].ToString() == "Session" ? "active" : "")"
+                               asp-controller="Session"
+                               asp-action="Index">
+                                <i class="fas fa-clock"></i>
+                                <span>Сеанси</span>
+                            </a>
+                        </li>
                         @if (User?.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item">
-                                <span class="nav-link text-white">Hello, @User.Identity.Name!</span>
+                                <a class="nav-link @(ViewContext.RouteData.Values["Controller"].ToString() == "Ticket" ? "active" : "")"
+                                   asp-controller="Ticket"
+                                   asp-action="MyTickets">
+                                    <i class="fas fa-ticket-alt"></i>
+                                    <span>Мої квитки</span>
+                                </a>
                             </li>
+                        }
+                    </ul>
+
+                    <ul class="navbar-nav">
+                        @if (User?.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item me-3">
+                                <div class="user-greeting d-flex align-items-center gap-2">
+                                    <i class="fas fa-user-circle"></i>
+                                    <span>@User.Identity.Name</span>
+                                </div>
+                            </li>
+
                             @if (User.IsInRole("Admin"))
                             {
-                                <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle text-white" href="#" id="adminDropdown" role="button" 
-                                       data-bs-toggle="dropdown" aria-expanded="false">
-                                        Admin Panel
+                                <li class="nav-item dropdown me-3">
+                                    <a class="nav-link dropdown-toggle d-flex align-items-center"
+                                       href="#"
+                                       id="adminDropdown"
+                                       role="button"
+                                       data-bs-toggle="dropdown"
+                                       aria-expanded="false">
+                                        <i class="fas fa-cog me-2"></i>
+                                        <span>Admin Panel</span>
                                     </a>
-                                    <ul class="dropdown-menu" aria-labelledby="adminDropdown">
-                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="ManageFilms">Manage Films</a></li>
-                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="ManageSessions">Manage Sessions</a></li>
-                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="ManageTickets">Manage Tickets</a></li>
-                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="ManageHalls">Manage Halls</a></li>
-                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="ManageActors">Manage Actors</a></li>
-                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="ManageGenres">Manage Genres</a></li>
+
+                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm"
+                                        aria-labelledby="adminDropdown">
+                                        @{
+                                            var adminMenuItems = new[]
+                                            {
+                                new { Action = "ManageFilms", Icon = "fa-film", Text = "Manage Films" },
+                                new { Action = "ManageSessions", Icon = "fa-clock", Text = "Manage Sessions" },
+                                new { Action = "ManageTickets", Icon = "fa-ticket-alt", Text = "Manage Tickets" },
+                                new { Action = "ManageHalls", Icon = "fa-door-open", Text = "Manage Halls" },
+                                new { Action = "ManageActors", Icon = "fa-user", Text = "Manage Actors" },
+                                new { Action = "ManageGenres", Icon = "fa-theater-masks", Text = "Manage Genres" }
+                                };
+                                        }
+
+                                        @foreach (var item in adminMenuItems)
+                                        {
+                                            <li>
+                                                <a class="dropdown-item d-flex align-items-center py-2"
+                                                   asp-controller="Admin"
+                                                   asp-action="@item.Action">
+                                                    <i class="fas @item.Icon me-2"></i>
+                                                    <span>@item.Text</span>
+                                                </a>
+                                            </li>
+                                        }
                                     </ul>
                                 </li>
                             }
+
                             <li class="nav-item">
-                                <form asp-controller="User" asp-action="Logout" method="post">
-                                    <button type="submit" class="btn btn-link nav-link text-white">Logout</button>
+                                <form asp-controller="User"
+                                      asp-action="Logout"
+                                      method="post"
+                                      class="form-logout-btn">
+                                    <button type="submit"
+                                            class="btn btn-outline-light nav-logout d-flex align-items-center">
+                                        <i class="fas fa-sign-out-alt me-2"></i>
+                                        <span>Logout</span>
+                                    </button>
                                 </form>
                             </li>
                         }
                         else
                         {
-                            <li class="nav-item">
-                                <a class="nav-link text-white" asp-controller="User" asp-action="Login">Login</a>
+                            <li class="nav-item me-2">
+                                <a class="nav-link nav-btn-login d-flex align-items-center"
+                                   asp-controller="User"
+                                   asp-action="Login">
+                                    <i class="fas fa-sign-in-alt me-2"></i>
+                                    <span>Login</span>
+                                </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-white" asp-controller="User" asp-action="Register">Register</a>
+                                <a class="nav-link nav-btn-register d-flex align-items-center"
+                                   asp-controller="User"
+                                   asp-action="Register">
+                                    <i class="fas fa-user-plus me-2"></i>
+                                    <span>Register</span>
+                                </a>
                             </li>
                         }
                     </ul>
@@ -65,15 +151,56 @@
             </div>
         </nav>
     </header>
+
     <div class="container">
-        <main role="main" class="pb-3">
+        <main role="main" class="pb-4 m-5">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <!-- ... existing footer code ... -->
+    <footer class="footer bg-dark text-light py-5">
+        <div class="container">
+            <div class="row gy-5">
+                <div class="col-md-4 footer-column">
+                    <h5 class="mb-3">About Cinema</h5>
+                    <p class="small" style="line-height: 1.6;">Your premier destination for the latest movies and entertainment.<br>Experience the magic of cinema in ultimate comfort and style.</p>
+                </div>
+
+                <div class="col-md-4 footer-column">
+                    <h5 class="mb-3">Quick Links</h5>
+                    <ul class="footer-links list-unstyled">
+                        <li class="mb-2">
+                            <a asp-controller="Film" asp-action="Index" class="text-decoration-none text-light">Films</a>
+                        </li>
+                        <li class="mb-2">
+                            <a asp-controller="Session" asp-action="Index" class="text-decoration-none text-light">Sessions</a>
+                        </li>
+                        <li>
+                            <a asp-controller="Home" asp-action="Contact" class="text-decoration-none text-light">Contact Us</a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="col-md-4 footer-column">
+                    <h5 class="mb-3">Follow Us</h5>
+                    <div class="d-flex gap-4">
+                        <a href="#" aria-label="Facebook" class="text-light fs-5"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" aria-label="Twitter" class="text-light fs-5"><i class="fab fa-twitter"></i></a>
+                        <a href="#" aria-label="Instagram" class="text-light fs-5"><i class="fab fa-instagram"></i></a>
+                        <a href="#" aria-label="YouTube" class="text-light fs-5"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-12 text-center">
+                    <small class="text-secondary">&copy; @DateTime.Now.Year Cinema. All rights reserved.</small>
+                </div>
+            </div>
+        </div>
     </footer>
+
+
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
@@ -82,4 +209,4 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
-</html> 
+</html>

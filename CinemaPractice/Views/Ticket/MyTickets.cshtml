@@ -1,19 +1,26 @@
 @using Infrastructure.Entities
 @using System.Linq
 @model IEnumerable<Ticket>
-
 <div class="container">
     <h2>My Tickets</h2>
-    
-    @{
-        // Фільтруємо квитки: залишаємо лише ті, чиї сеанси мають активний зал
-        var activeTickets = Model.Where(ticket => ticket.Session?.Hall != null && ticket.Session.Hall.IsActive);
-    }
+@{
+    // Фільтруємо квитки: залишаємо лише ті, чиї сеанси мають активний зал
+    var activeTickets = Model?.Where(ticket => ticket.Session?.Hall != null && ticket.Session.Hall.IsActive) ?? Enumerable.Empty<Ticket>();
+}
 
-    @if (!activeTickets.Any())
+@if (!activeTickets.Any())
+{
+    <p>No active tickets available.</p>
+}
+
     {
-        <div class="alert alert-info">
-            You don't have any tickets yet.
+        <div class="empty-state">
+            <i class="fas fa-ticket-alt"></i>
+            <h3>������ ���� ����</h3>
+            <p>� ��� �� ���� ������. ����������� ���� ������� ������ �� ���������� ��� ��������� ��������!</p>
+            <a href="@Url.Action("Index", "Film")" class="btn btn-primary">
+                <i class="fas fa-film me-2"></i>����������� ������
+            </a>
         </div>
     }
     else

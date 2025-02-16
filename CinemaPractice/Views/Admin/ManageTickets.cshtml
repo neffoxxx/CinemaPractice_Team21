@@ -47,21 +47,28 @@
                             <div class="btn-group">
                                 @if (ticket.IsHallActive)
                                 {
-                                    <a asp-action="EditTicket" asp-route-id="@ticket.TicketId" 
-                                       class="btn btn-primary btn-sm">Edit</a>
+                                    <a asp-action="EditTicket" asp-route-id="@ticket.TicketId"
+                                       class="btn btn-sm text-primary hover:bg-primary-50 rounded-lg p-2">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
                                 }
                                 else
                                 {
                                     <button class="btn btn-secondary btn-sm" disabled 
                                             title="Editing ticket for inactive hall is not allowed">
-                                        Edit
+                                        <i class="fas fa-edit"></i>
                                     </button>
                                 }
-                                <form asp-action="DeleteTicket" asp-route-id="@ticket.TicketId" 
-                                      method="post" style="display: inline;">
-                                    <button type="submit" class="btn btn-danger btn-sm" 
-                                            onclick="return confirm('Are you sure you want to delete this ticket?')">
-                                        Delete
+
+                                <form asp-action="DeleteTicket" asp-route-id="@ticket.TicketId" method="post"
+                                      class="d-inline-block manage-films-delete-btn"
+                                      onsubmit="return confirm('Are you sure you want to delete this ticket?');">
+                                    <button type="submit"
+                                            class="btn btn-sm text-danger hover:bg-danger-50 rounded-lg p-2">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </form>
+
                                     </button>
                                 </form>
                             </div>

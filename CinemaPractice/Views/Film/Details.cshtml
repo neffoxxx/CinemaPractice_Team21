@@ -25,146 +25,153 @@
 
 <div class="container mt-4">
     <div class="row">
-        <div class="col-md-4">
-            @if (!string.IsNullOrEmpty(Model.PosterUrl))
-            {
-                <img src="@Model.PosterUrl" class="img-fluid" alt="@Model.Title" />
-            }
-        </div>
-        <div class="col-md-8">
-            <h2>@Model.Title</h2>
-            <hr />
-            <dl class="row">
-                <dt class="col-sm-3">Description</dt>
-                <dd class="col-sm-9">@Model.Description</dd>
 
-                <dt class="col-sm-3">Duration</dt>
-                <dd class="col-sm-9">@Model.DurationMinutes minutes</dd>
+        <div class="movie-details-container">
+            <div class="movie-header">
+                <div class="movie-poster">
+                    @if (!string.IsNullOrEmpty(Model.PosterUrl))
+                    {
+                        <img src="@Model.PosterUrl" alt="@Model.Title" />
+                    }
+                </div>
 
-                <dt class="col-sm-3">Release Date</dt>
-                <dd class="col-sm-9">@Model.ReleaseDate.ToShortDateString()</dd>
+                <div class="movie-info">
+                    <h1 class="movie-title">@Model.Title</h1>
 
-                <dt class="col-sm-3">Rating</dt>
-                <dd class="col-sm-9">@Model.Rating.ToString("0.0", CultureInfo.InvariantCulture)</dd>
+                    <div class="movie-metadata">
+                        <div class="metadata-item">
+                            <span class="metadata-label">Duration</span>
+                            <span class="metadata-value">@Model.DurationMinutes minutes</span>
+                        </div>
 
-                @if (Model.MovieGenres != null && Model.MovieGenres.Any())
-                {
-                    <dt class="col-sm-3">Genres</dt>
-                    <dd class="col-sm-9">
-                        @foreach (var movieGenre in Model.MovieGenres)
-                        {
-                            <span class="badge bg-primary me-1">@movieGenre.Genre.Name</span>
-                        }
-                    </dd>
-                }
+                        <div class="metadata-item">
+                            <span class="metadata-label">Release Date</span>
+                            <span class="metadata-value">@Model.ReleaseDate.ToString("MMMM d, yyyy")</span>
+                        </div>
 
-                @if (Model.MovieActors != null && Model.MovieActors.Any())
-                {
-                    <dt class="col-sm-12 mt-4">Cast</dt>
-                    <dd class="col-sm-12">
-                        <div class="row">
-                            @foreach (var movieActor in Model.MovieActors)
+                        <div class="metadata-item">
+                            <span class="metadata-label">Rating</span>
+                            <div class="movie-rating">
+                                <i class="fas fa-star"></i>
+                                @Model.Rating.ToString("0.0")
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (Model.MovieGenres != null && Model.MovieGenres.Any())
+                    {
+                        <div class="genre-tags">
+                            @foreach (var movieGenre in Model.MovieGenres)
                             {
-                                <div class="col-md-3 mb-3">
-                                    <div class="card h-100">
-                                        @if (!string.IsNullOrEmpty(movieActor.Actor.PhotoUrl))
-                                        {
-                                            <img src="@movieActor.Actor.PhotoUrl" 
-                                                 class="card-img-top" 
-                                                 alt="@movieActor.Actor.Name"
-                                                 style="height: 200px; object-fit: cover;">
-                                        }
-                                        else
-                                        {
-                                            <div class="card-img-top bg-secondary text-white d-flex align-items-center justify-content-center" 
-                                                 style="height: 200px;">
-                                                <i class="fas fa-user fa-3x"></i>
-                                            </div>
-                                        }
-                                        <div class="card-body text-center">
-                                            <h6 class="card-title mb-0">@movieActor.Actor.Name</h6>
-                                        </div>
-                                        <div class="mt-3 text-center">
-                                            <a asp-action="Details" asp-controller="Actor" asp-route-id="@movieActor.Actor.ActorId" asp-route-movieId="@Model.MovieId" class="btn btn-primary align-items-center justify-content-center">
-                                                <i class="fas fa-info-circle"></i> Details
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
+                                <span class="genre-tag">@movieGenre.Genre.Name</span>
                             }
                         </div>
-                    </dd>
-                }
+                    }
 
-                @if (!string.IsNullOrEmpty(Model.TrailerUrl))
-                {
-                    <dt class="col-sm-12 mt-4">Trailer</dt>
-                    <dd class="col-sm-12">
-                        <div class="ratio ratio-16x9">
-                            <iframe src="@GetEmbedUrl(Model.TrailerUrl)" 
-                                    title="YouTube video player" 
-                                    frameborder="0" 
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                                    allowfullscreen>
-                            </iframe>
-                        </div>
-                    </dd>
-                }
-            </dl>
-
-            <h3 class="mt-4">Available Sessions</h3>
-            
-            @* Діагностична інформація *@
-            <div class="alert alert-info">
-                <p>Total sessions loaded: @(Model.Sessions?.Count ?? 0)</p>
-                <p>Current time: @DateTime.Now.ToString("dd.MM.yyyy HH:mm")</p>
+                    <div class="movie-description">
+                        <p>@Model.Description</p>
+                    </div>
+                </div>
             </div>
 
-            @if (Model.Sessions != null && Model.Sessions.Any())
+            @if (Model.MovieActors != null && Model.MovieActors.Any())
             {
-                var futureSessions = Model.Sessions
+                <div class="cast-section">
+                    <h2>Cast</h2>
+                    <div class="cast-grid">
+                        @foreach (var movieActor in Model.MovieActors)
+                        {
+                            <div class="cast-card">
+                                @if (!string.IsNullOrEmpty(movieActor.Actor.PhotoUrl))
+                                {
+                                    <img src="@movieActor.Actor.PhotoUrl" class="cast-image" alt="@movieActor.Actor.Name">
+                                }
+                                <div class="cast-info">
+                                    <h3 class="cast-name">@movieActor.Actor.Name</h3>
+                                    <a asp-action="Details" asp-controller="Actor"
+                                       asp-route-id="@movieActor.Actor.ActorId"
+                                       asp-route-movieId="@Model.MovieId"
+                                       class="btn-details">View Profile</a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(Model.TrailerUrl))
+            {
+                <div class="trailer-section">
+                    <h2>Trailer</h2>
+                    <div class="ratio ratio-16x9">
+                        <iframe src="@GetEmbedUrl(Model.TrailerUrl)"
+                                title="Movie Trailer"
+                                frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowfullscreen>
+                        </iframe>
+                    </div>
+                </div>
+            }
+
+            <div class="sessions-section">
+                <h2>Available Sessions</h2>
+                @if (Model.Sessions != null && Model.Sessions.Any())
+                {
+                    var futureSessions = Model.Sessions
                     .Where(s => s.StartTime > DateTime.Now)
                     .OrderBy(s => s.StartTime)
                     .ToList();
 
-                // Фільтруємо сеанси таким чином, щоб відображались лише ті, що мають активний зал
-                var availableSessions = futureSessions
-                    .Where(s => s.Hall != null &&
-                                s.Hall.IsActive &&
-                                (s.Tickets == null || s.Tickets.Count < s.Hall.Capacity))
-                    .ToList();
+@{
+    // Фільтруємо сеанси: залишаємо лише ті, що мають активний зал і не продані повністю
+    var availableSessions = futureSessions?
+        .Where(s => s.Hall != null &&
+                    s.Hall.IsActive &&
+                    (s.Tickets == null || s.Tickets.Count < s.Hall.Capacity))
+        .ToList() ?? new List<Session>();
+}
 
-                @if (futureSessions.Any())
-                {
-                    @if (availableSessions.Any())
+@if (futureSessions?.Any() == true)
+{
+    @if (availableSessions.Any())
+    {
+        // Відображаємо список доступних сеансів
+    }
+    else
+    {
+        <p>No available sessions.</p>
+    }
+}
+else
+{
+    <p>No future sessions available.</p>
+}
+
                     {
-                        <table class="table table-hover">
-                            <thead class="table-light">
+                        <table class="sessions-table">
+                            <thead>
                                 <tr>
                                     <th>Date</th>
-                                    <th>Start Time</th>
-                                    <th>End Time</th>
+                                    <th>Time</th>
                                     <th>Hall</th>
                                     <th>Price</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var session in availableSessions)
+                                @foreach (var session in futureSessions)
                                 {
                                     <tr>
-                                        <td>@session.StartTime.ToString("dd.MM.yyyy")</td>
+                                        <td>@session.StartTime.ToString("MMM dd, yyyy")</td>
                                         <td>@session.StartTime.ToString("HH:mm")</td>
-                                        <td>@session.EndTime.ToString("HH:mm")</td>
                                         <td>@(session.Hall?.Name ?? "N/A")</td>
                                         <td>@session.Price.ToString("C")</td>
                                         <td>
-                                            <a asp-controller="Ticket" 
-                                               asp-action="Book" 
-                                               asp-route-sessionId="@session.SessionId" 
-                                               class="btn btn-primary">
-                                                Buy Ticket
-                                            </a>
+                                            <a asp-controller="Ticket"
+                                               asp-action="Book"
+                                               asp-route-sessionId="@session.SessionId"
+                                               class="btn-details">Book Now</a>
                                         </td>
                                     </tr>
                                 }
@@ -174,28 +181,31 @@
                     else
                     {
                         <div class="alert alert-info">
-                            <i class="fas fa-info-circle"></i> No available seats for current sessions.
+                            <i class="fas fa-info-circle"></i> No upcoming sessions available.
                         </div>
                     }
                 }
                 else
                 {
-                    <div class="alert alert-warning">
-                        <i class="fas fa-info-circle"></i> All sessions for this movie have already passed.
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> No sessions scheduled for this movie.
                     </div>
                 }
-            }
-            else
-            {
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle"></i> No sessions available for this movie at the moment.
-                </div>
-            }
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> No sessions available for this movie at the moment.
         </div>
-    </div>
-    <div class="mt-3">
-        <a asp-action="Index" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Back to List
-        </a>
-    </div>
+    }
 </div>
+</div>
+
+<div class="mt-3">
+    <a asp-action="Index" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Movies
+    </a>
+</div>
+
+    </div>
+
