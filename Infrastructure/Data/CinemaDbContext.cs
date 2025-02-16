@@ -9,6 +9,13 @@ namespace Infrastructure.Data
     {
         public CinemaDbContext(DbContextOptions<CinemaDbContext> options) : base(options) { }
 
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+          base.OnConfiguring(optionsBuilder);
+              optionsBuilder.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=CinemaDb;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True");
+        }
+
+
         public DbSet<Movie> Movies { get; set; }
         public DbSet<Actor> Actors { get; set; }
         public DbSet<Genre> Genres { get; set; }
@@ -21,7 +28,7 @@ namespace Infrastructure.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Застосувати всі конфігурації з Assembly
+
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(CinemaDbContext).Assembly);
 
             modelBuilder.Entity<MovieGenre>()
@@ -66,14 +73,12 @@ namespace Infrastructure.Data
                 entity.Property(e => e.Name).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.Description).HasMaxLength(500);
                 
-                // Зв'язок один-до-багатьох з Sessions
                 entity.HasMany(h => h.Sessions)
                       .WithOne(s => s.Hall)
                       .HasForeignKey(s => s.HallId)
                       .OnDelete(DeleteBehavior.Restrict);
             });
 
-            // Конфігурація зв'язку між Session та Hall
             modelBuilder.Entity<Session>()
                 .HasOne(s => s.Movie)
                 .WithMany(m => m.Sessions)

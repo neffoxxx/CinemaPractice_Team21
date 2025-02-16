@@ -17,26 +17,23 @@ using System;
 using Infrastructure.Interfaces;
 using AppCore.Services.Interfaces;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddControllersWithViews();
 
-// Configure Database Context
 builder.Services.AddDbContext<CinemaDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
-           .LogTo(Console.WriteLine); // Keep logging for dev, remove for prod
+           .LogTo(Console.WriteLine); 
 });
 
-// Configure Repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ISessionRepository, SessionRepository>();
 builder.Services.AddScoped<ITicketRepository, TicketRepository>();
 builder.Services.AddScoped<IHallRepository, HallRepository>();
 
-// Configure Services
 builder.Services.AddScoped<IMovieService, MovieService>();
 builder.Services.AddScoped<IHallService, HallService>();
 builder.Services.AddScoped<ITicketService, TicketService>();
@@ -44,16 +41,13 @@ builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddScoped<IActorService, ActorService>();
 builder.Services.AddScoped<IGenreService, GenreService>();
 
-// Configure Validators
 builder.Services.AddScoped<IValidator<MovieDTO>, MovieValidator>();
 builder.Services.AddScoped<IValidator<SessionDTO>, SessionValidator>();
 builder.Services.AddScoped<IValidator<TicketDTO>, TicketValidator>();
 builder.Services.AddScoped<IValidator<HallDTO>, HallValidator>();
 
-//Configure AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
-// Configure Session
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(30);
@@ -61,7 +55,6 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-// Configure Authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -71,9 +64,10 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.Name = "CinemaPracticeAuth";
     });
 
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Film/Error");

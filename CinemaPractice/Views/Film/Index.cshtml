@@ -1,41 +1,35 @@
 @model IEnumerable<Infrastructure.Entities.Movie>
 
 <h2 class="text-center my-4">Films</h2>
-
-<div class="row">
+<div class="films-grid">
     @foreach (var movie in Model)
     {
-        <div class="col-md-3 mb-4">
-            <div class="card h-100">
-                @if (!string.IsNullOrEmpty(movie.PosterUrl))
-                {
-                    <img src="@movie.PosterUrl" class="card-img-top" alt="@movie.Title" style="height: 450px; width: 100%; object-fit: cover;">
-                }
-                else
-                {
-                    <img src="/images/default-movie-poster.jpg" class="card-img-top" alt="Default poster" style="height: 450px; width: 100%; object-fit: cover;">
-                }
-                <div class="card-body">
-                    <h5 class="card-title">@movie.Title</h5>
-                    <p class="card-text">
-                        Rating: @movie.Rating.ToString("0.0")
-                    </p>
-                    <p class="card-text">
-                        <small class="text-muted">
-                            Genres: 
-                            @if (movie.MovieGenres != null && movie.MovieGenres.Any())
-                            {
-                                @string.Join(", ", movie.MovieGenres.Select(mg => mg.Genre.Name))
-                            }
-                            else
-                            {
-                                <span>No genres specified</span>
-                            }
-                        </small>
-                    </p>
-                    <a href="@Url.Action("Details", "Film", new { id = movie.MovieId })" 
-                       class="btn btn-primary">Details</a>
+        <div class="card">
+            @if (!string.IsNullOrEmpty(movie.PosterUrl))
+            {
+                <img src="@movie.PosterUrl" class="card-img-top" alt="@movie.Title">
+            }
+            else
+            {
+                <img src="/images/default-movie-poster.jpg" class="card-img-top" alt="Default poster">
+            }
+            <div class="card-body">
+                <h5 class="card-title">@movie.Title</h5>
+                <div class="rating-badge">
+                    <i class="fas fa-star"></i>
+                    @movie.Rating.ToString("0.0")
                 </div>
+                @if (movie.MovieGenres != null && movie.MovieGenres.Any())
+                {
+                    <div class="genre-tags">
+                        @foreach (var movieGenre in movie.MovieGenres)
+                        {
+                            <span class="genre-tag">@movieGenre.Genre.Name</span>
+                        }
+                    </div>
+                }
+                <a href="@Url.Action("Details", "Film", new { id = movie.MovieId })"
+                   class="btn btn-details">View Details</a>
             </div>
         </div>
     }
@@ -65,3 +59,4 @@
         }
     </style>
 }
+

@@ -1,52 +1,82 @@
-@* @model IEnumerable<Infrastructure.Entities.Movie> *@
 @model IEnumerable<AppCore.DTOs.MovieDTO>
+<div class="container">
+    <div class="manage-films-block">
+        <div class="d-flex justify-content-between align-items-center mb-6">
+            <h1 class="text-3xl font-bold" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                Manage Films
+            </h1>
+            <a asp-action="AddFilm" class="btn btn-primary d-flex align-items-center gap-2"
+               style="background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none;">
+                <i class="fas fa-plus"></i>
+                Add New Film
+            </a>
+        </div>
 
-<h2>Manage Films</h2>
-
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success">@TempData["Success"]</div>
-}
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-danger">@TempData["Error"]</div>
-}
-
-<p>
-    <a asp-action="AddFilm" class="btn btn-primary">Add New Film</a>
-</p>
-
-<table class="table">
-    <thead>
-        <tr>
-            <th>Title</th>
-            <th>Description</th>
-            <th>Duration (min)</th>
-            <th>Release Date</th>
-            <th>Rating</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
+        @if (TempData["Success"] != null)
         {
-            <tr>
-                <td>@item.Title</td>
-                <td>@item.Description</td>
-                <td>@item.DurationMinutes</td>
-                <td>@item.ReleaseDate.ToShortDateString()</td>
-                <td>@item.Rating</td>
-                <td>
-                    <div class="btn-group">
-                        <a asp-action="EditFilm" asp-route-id="@item.MovieId" class="btn btn-primary">Edit</a>
-                        <form asp-action="DeleteFilm" asp-route-id="@item.MovieId" method="post"
-                              style="display: inline-block;"
-                              onsubmit="return confirm('Are you sure you want to delete this film?');">
-                            <button type="submit" class="btn btn-danger">Delete</button>
-                        </form>
-                    </div>
-                </td>
-            </tr>
+            <div class="alert alert-success alert-dismissible fade show mb-6" role="alert">
+                <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
         }
-    </tbody>
-</table>
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show mb-6" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <div class="card shadow-md rounded-xl overflow-hidden">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead style="background: linear-gradient(135deg, #4f46e5, #7c3aed);">
+                            <tr>
+                                <th class="text-white px-6 py-4">Title</th>
+                                <th class="text-white px-6 py-4">Description</th>
+                                <th class="text-white px-6 py-4 text-center">Duration (min)</th>
+                                <th class="text-white px-6 py-4 text-center">Release Date</th>
+                                <th class="text-white px-6 py-4 text-center">Rating</th>
+                                <th class="text-white px-6 py-4 text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            @foreach (var item in Model)
+                            {
+                                <tr class="hover:bg-gray-50 transition-all">
+                                    <td class="px-6 py-4 font-medium">@item.Title</td>
+                                    <td class="px-6 py-4 text-muted">@item.Description</td>
+                                    <td class="px-6 py-4 text-center">@item.DurationMinutes</td>
+                                    <td class="px-6 py-4 text-center">@item.ReleaseDate.ToShortDateString()</td>
+                                    <td class="px-6 py-4 text-center">
+                                        <span class="px-3 py-1 rounded-full bg-indigo-50 text-indigo-700">
+                                            @item.Rating
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <a asp-action="EditFilm" asp-route-id="@item.MovieId"
+                                               class="btn btn-sm text-primary hover:bg-primary-50 rounded-lg p-2">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form asp-action="DeleteFilm" asp-route-id="@item.MovieId" method="post"
+                                                  class="d-inline-block manage-films-delete-btn"
+                                                  onsubmit="return confirm('Are you sure you want to delete this film?');">
+                                                <button type="submit"
+                                                        class="btn btn-sm text-danger hover:bg-danger-50 rounded-lg p-2">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
