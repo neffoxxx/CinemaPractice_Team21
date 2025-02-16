@@ -21,5 +21,8 @@ namespace Infrastructure.Entities
 
         // Навігаційні властивості
         public required ICollection<Session> Sessions { get; set; }
+
+        // Нова властивість для перевірки, чи можна бронювати місця
+        public bool CanBookSeats => IsActive;
     }
 } 

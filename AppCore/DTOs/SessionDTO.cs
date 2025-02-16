@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace AppCore.DTOs
@@ -8,9 +10,11 @@ namespace AppCore.DTOs
         public int SessionId { get; set; }
 
         [Required(ErrorMessage = "Movie is required")]
+        [Range(1, int.MaxValue, ErrorMessage = "MovieId must be greater than 0")]
         public int MovieId { get; set; }
 
         [Required(ErrorMessage = "Hall is required")]
+        [Range(1, int.MaxValue, ErrorMessage = "HallId must be greater than 0")]
         public int HallId { get; set; }
 
         [Required(ErrorMessage = "Start time is required")]

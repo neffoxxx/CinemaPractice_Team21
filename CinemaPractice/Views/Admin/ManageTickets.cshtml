@@ -1,5 +1,6 @@
 @using Infrastructure.Entities
 @model IEnumerable<AppCore.DTOs.TicketDTO>
+
 <div class="container">
     <h2>Manage Tickets</h2>
 
@@ -26,7 +27,8 @@
                     <th>Session</th>
                     <th>Row</th>
                     <th>Seat</th>
-                    <th>Status</th>
+                    <th>Ticket Status</th>
+                    <th>Hall Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -36,22 +38,37 @@
                     <tr>
                         <td>@ticket.UserName</td>
                         <td>@ticket.MovieTitle</td>
-                       <td>@ticket.ShowTime.ToString("g")</td>
+                        <td>@ticket.ShowTime.ToString("g")</td>
                         <td>@ticket.RowNumber</td>
                         <td>@ticket.SeatNumber</td>
                         <td>@ticket.Status</td>
+                        <td>@(ticket.IsHallActive ? "Active" : "Inactive")</td>
                         <td>
                             <div class="btn-group">
-                                <a asp-action="EditTicket" asp-route-id="@ticket.TicketId"
-                                   class="btn btn-sm text-primary hover:bg-primary-50 rounded-lg p-2">
-                                    <i class="fas fa-edit"></i>
-                                </a>
+                                @if (ticket.IsHallActive)
+                                {
+                                    <a asp-action="EditTicket" asp-route-id="@ticket.TicketId"
+                                       class="btn btn-sm text-primary hover:bg-primary-50 rounded-lg p-2">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-secondary btn-sm" disabled 
+                                            title="Editing ticket for inactive hall is not allowed">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                }
+
                                 <form asp-action="DeleteTicket" asp-route-id="@ticket.TicketId" method="post"
                                       class="d-inline-block manage-films-delete-btn"
-                                      onsubmit="return confirm('Are you sure you want to delete this tiket?');">
+                                      onsubmit="return confirm('Are you sure you want to delete this ticket?');">
                                     <button type="submit"
                                             class="btn btn-sm text-danger hover:bg-danger-50 rounded-lg p-2">
                                         <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </form>
+
                                     </button>
                                 </form>
                             </div>

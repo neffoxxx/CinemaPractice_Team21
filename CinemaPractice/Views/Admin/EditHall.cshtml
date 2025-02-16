@@ -2,6 +2,14 @@
 
 <div class="container">
     <h2>Edit Hall</h2>
+
+    @if (!Model.IsActive)
+    {
+        <div class="alert alert-warning">
+            ATTENTION: this hall is currently inactive, so users will not be able to book seats.
+        </div>
+    }
+
     <div class="row">
         <div class="col-md-6">
             <form asp-action="EditHall" method="post">
@@ -35,6 +43,11 @@
                 <div class="mb-3 form-check">
                     <input asp-for="IsActive" class="form-check-input" />
                     <label asp-for="IsActive" class="form-check-label"></label>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Hall Status</label>
+                    <input type="text" class="form-control" value="@(Model.IsActive ? "Active" : "Inactive")" readonly />
                 </div>
 
                 <div class="mb-3">

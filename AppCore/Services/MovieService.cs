@@ -10,6 +10,7 @@ using System.Linq;
 using Infrastructure.Interfaces;
 using System;
 using Infrastructure.Data;
+using AppCore.Interfaces;
 
 namespace AppCore.Services
 {
@@ -21,8 +22,8 @@ namespace AppCore.Services
         private readonly CinemaDbContext _context;
 
         public MovieService(
-            IRepository<Movie> movieRepository, 
-            IMapper mapper, 
+            IRepository<Movie> movieRepository,
+            IMapper mapper,
             ILogger<MovieService> logger,
             CinemaDbContext context)
         {
@@ -37,6 +38,25 @@ namespace AppCore.Services
             _logger.LogInformation("Getting all movies");
             var movies = await _movieRepository.GetAllAsync();
             return _mapper.Map<IEnumerable<MovieDTO>>(movies);
+        }
+
+        public async Task<IEnumerable<MovieDTO>> GetAllMovieDTOsAsync()
+        {
+            _logger.LogInformation("Getting all movies as DTOs");
+            return await _context.Movies
+                .AsNoTracking()
+                .Select(m => new MovieDTO
+                {
+                    MovieId = m.MovieId,
+                    Title = m.Title,
+                    Description = m.Description,
+                    Director = m.Director,
+                    ReleaseDate = m.ReleaseDate,
+                    DurationMinutes = m.DurationMinutes,
+                    Rating = m.Rating,
+                    // Add other properties as needed for the ManageFilms view
+                })
+                .ToListAsync();
         }
 
         public async Task<MovieDTO?> GetMovieByIdAsync(int id)
@@ -60,7 +80,7 @@ namespace AppCore.Services
 
                 var movieDto = _mapper.Map<MovieDTO>(movie);
                 _logger.LogInformation("Successfully retrieved movie: {Title}", movieDto.Title);
-                
+
                 return movieDto;
             }
             catch (Exception ex)
@@ -109,7 +129,7 @@ namespace AppCore.Services
         public async Task UpdateMovieAsync(MovieDTO movieDto)
         {
             _logger.LogInformation("Updating movie: {Id}", movieDto.MovieId);
-            
+
             var existingMovie = await _context.Movies
                 .Include(m => m.MovieGenres)
                 .Include(m => m.MovieActors)
@@ -162,14 +182,11 @@ namespace AppCore.Services
             _logger.LogInformation("Deleting movie by id: {Id}", id);
             await _movieRepository.DeleteAsync(id);
         }
-    }
 
-    public interface IMovieService
-    {
-        Task<IEnumerable<MovieDTO>> GetAllMoviesAsync();
-        Task<MovieDTO?> GetMovieByIdAsync(int id);
-        Task AddMovieAsync(MovieDTO movieDto);
-        Task UpdateMovieAsync(MovieDTO movieDto);
-        Task DeleteMovieAsync(int id);
+        public List<MovieDTO> GetAllMovies()
+        {
+            var movies = _movieRepository.GetAllAsync().Result;
+            return _mapper.Map<List<MovieDTO>>(movies);
+        }
     }
 }

@@ -3,8 +3,9 @@ using System.Threading.Tasks;
 using Infrastructure.Entities;
 using AppCore.DTOs;
 using AppCore.ViewModels;
+using System;
 
-namespace AppCore.Services.Interfaces
+namespace AppCore.Interfaces
 {
     public interface ISessionService
     {
@@ -18,5 +19,13 @@ namespace AppCore.Services.Interfaces
         Task PopulateSessionSelectLists(SessionDTO model);
         Task<IEnumerable<Session>> GetSessionsByFilmIdAsync(int filmId);
         Task<IEnumerable<SessionViewModel>> GetSessionViewModelsByFilmIdAsync(int filmId);
+        Task<IEnumerable<SessionDTO>> GetFilteredSessionsAsync(
+            DateTime? startDate,
+            DateTime? endDate,
+            int? genreId,
+            decimal? minPrice,
+            decimal? maxPrice,
+            int? hallId,
+            string movieTitle);
     }
 }

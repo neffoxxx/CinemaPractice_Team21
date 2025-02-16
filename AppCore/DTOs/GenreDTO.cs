@@ -1,10 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 
-public class GenreDTO
+namespace AppCore.DTOs
 {
-    public int GenreId { get; set; }
-    
-    [Required(ErrorMessage = "Name is required")]
-    [StringLength(50, ErrorMessage = "Name cannot exceed 50 characters")]
-    public required string Name { get; set; }
+    public class GenreDTO
+    {
+        public int GenreId { get; set; }
+
+        [Required(ErrorMessage = "Name is required")]
+        [StringLength(50, ErrorMessage = "Name cannot exceed 50 characters")]
+        public required string Name { get; set; }
+    }
 }

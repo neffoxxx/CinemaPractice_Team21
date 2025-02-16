@@ -15,6 +15,6 @@ namespace Infrastructure.Repositories
         Task<IEnumerable<Session>> GetAllWithIncludeAsync(
             Func<IQueryable<Session>, IIncludableQueryable<Session, object>>? include = null);
         Task<IEnumerable<Session>> GetFutureSessionsAsync();
-        Task<bool> IsHallAvailableAsync(int hallId, DateTime startTime, DateTime endTime, int? excludeSessionId = null);
+        Task<bool> IsHallAvailableAsync(int hallId, DateTime startTime, DateTime endTime, int currentSessionId = 0);
     }
 } 

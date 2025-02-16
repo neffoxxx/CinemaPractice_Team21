@@ -1,6 +1,8 @@
 ﻿using AppCore.DTOs;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
-namespace AppCore.Services
+namespace AppCore.Interfaces
 {
     public interface ITicketService
     {

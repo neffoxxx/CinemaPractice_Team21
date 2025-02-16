@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Infrastructure.Entities; // Залежно від вашої структури проекту
-using AppCore.Services; // Замість YourNamespace використайте правильний простір імен для вашого сервісу
+using AppCore.Interfaces;
 using System.Threading.Tasks;
 
 namespace CinemaPractice.Controllers

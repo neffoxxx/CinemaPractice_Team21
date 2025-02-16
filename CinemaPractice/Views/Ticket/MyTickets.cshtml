@@ -1,16 +1,25 @@
 @using Infrastructure.Entities
+@using System.Linq
 @model IEnumerable<Ticket>
 <div class="container">
     <h2>My Tickets</h2>
+@{
+    // Р¤С–Р»СЊС‚СЂСѓС”РјРѕ РєРІРёС‚РєРё: Р·Р°Р»РёС€Р°С”РјРѕ Р»РёС€Рµ С‚С–, С‡РёС— СЃРµР°РЅСЃРё РјР°СЋС‚СЊ Р°РєС‚РёРІРЅРёР№ Р·Р°Р»
+    var activeTickets = Model?.Where(ticket => ticket.Session?.Hall != null && ticket.Session.Hall.IsActive) ?? Enumerable.Empty<Ticket>();
+}
 
-    @if (!Model.Any())
+@if (!activeTickets.Any())
+{
+    <p>No active tickets available.</p>
+}
+
     {
         <div class="empty-state">
             <i class="fas fa-ticket-alt"></i>
-            <h3>Квитків поки немає</h3>
-            <p>У вас ще немає квитків. Перегляньте наші останні фільми та забронюйте свій наступний кіносеанс!</p>
+            <h3>пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ</h3>
+            <p>пїЅ пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ. пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ!</p>
             <a href="@Url.Action("Index", "Film")" class="btn btn-primary">
-                <i class="fas fa-film me-2"></i>Переглянути фільми
+                <i class="fas fa-film me-2"></i>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
             </a>
         </div>
     }
@@ -30,7 +39,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var ticket in Model)
+                    @foreach (var ticket in activeTickets)
                     {
                         <tr>
                             <td>@(ticket.Session?.Movie?.Title ?? "N/A")</td>

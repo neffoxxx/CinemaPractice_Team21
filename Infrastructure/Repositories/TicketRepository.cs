@@ -20,10 +20,10 @@ namespace Infrastructure.Repositories
         public async Task<IEnumerable<Ticket>> GetUserTicketsAsync(int userId)
         {
             return await _context.Tickets
-                .Include(t => t.Session)
-                    .ThenInclude(s => s != null ? s.Movie : null)
-                .Include(t => t.Session)
-                    .ThenInclude(s => s != null ? s.Hall : null)
+                .Include(t => t.Session!)
+                    .ThenInclude(s => s.Movie)
+                .Include(t => t.Session!)
+                    .ThenInclude(s => s.Hall)
                 .Where(t => t.UserId == userId)
                 .OrderByDescending(t => t.BookingTime)
                 .ToListAsync();
@@ -32,8 +32,10 @@ namespace Infrastructure.Repositories
         public async Task<IEnumerable<Ticket>> GetAllWithDetailsAsync()
         {
             return await _context.Tickets
-                .Include(t => t.Session)
-                    .ThenInclude(s => s != null ? s.Movie : null)
+                .Include(t => t.Session!)
+                    .ThenInclude(s => s.Movie)
+                .Include(t => t.Session!)
+                    .ThenInclude(s => s.Hall)
                 .Include(t => t.User)
                 .OrderByDescending(t => t.BookingTime)
                 .ToListAsync();
@@ -44,7 +46,7 @@ namespace Infrastructure.Repositories
             return await _context.Tickets
                 .FirstOrDefaultAsync(t => 
                     t.SessionId == sessionId && 
-                    t.SeatNumber == seatNumber.ToString() &&
+                    t.SeatNumber == seatNumber &&
                     t.Status == "Booked");
         }
 
@@ -59,10 +61,10 @@ namespace Infrastructure.Repositories
         public async Task<Ticket?> GetByIdWithDetailsAsync(int id)
         {
             return await _context.Tickets
-                .Include(t => t.Session)
-                    .ThenInclude(s => s!.Movie)
-                .Include(t => t.Session)
-                    .ThenInclude(s => s!.Hall)
+                .Include(t => t.Session!)
+                    .ThenInclude(s => s.Movie)
+                .Include(t => t.Session!)
+                    .ThenInclude(s => s.Hall)
                 .Include(t => t.User)
                 .FirstOrDefaultAsync(t => t.TicketId == id);
         }
